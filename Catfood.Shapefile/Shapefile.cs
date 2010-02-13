@@ -37,6 +37,7 @@ namespace Catfood.Shapefile
         private string _shapefileMainPath;
         private string _shapefileIndexPath;
         private string _shapefileDbasePath;
+        private string _shapefileTempDbasePath;
         private FileStream _mainStream;
         private FileStream _indexStream;
         private Header _mainHeader;
@@ -202,10 +203,32 @@ namespace Catfood.Shapefile
 
         private void OpenDb()
         {
+            // The drivers for DBF files throw an exception if the filename 
+            // is longer than 8 characters - in this case create a temp file
+            // for the DB
+            string safeDbasePath = _shapefileDbasePath;
+            if (Path.GetFileNameWithoutExtension(safeDbasePath).Length > 8)
+            {
+                // create/delete temp file (we just want a safe path)
+                string initialTempFile = Path.GetTempFileName();
+                try
+                {
+                    File.Delete(initialTempFile);
+                }
+                catch { }
+
+                // set the correct extension
+                _shapefileTempDbasePath = Path.ChangeExtension(initialTempFile, DbasePathExtension);
+
+                // copy over the DB
+                File.Copy(_shapefileDbasePath, _shapefileTempDbasePath, true);
+                safeDbasePath = _shapefileTempDbasePath;
+            }
+
             string connectionString = string.Format(DbConnectionStringTemplate,
-                Path.GetDirectoryName(_shapefileDbasePath));
+                Path.GetDirectoryName(safeDbasePath));
             string selectString = string.Format(DbSelectStringTemplate,
-                Path.GetFileNameWithoutExtension(_shapefileDbasePath));
+                Path.GetFileNameWithoutExtension(safeDbasePath));
 
             _dbConnection = new OleDbConnection(connectionString);
             _dbConnection.Open();
@@ -231,6 +254,20 @@ namespace Catfood.Shapefile
             {
                 _dbConnection.Close();
                 _dbConnection = null;
+            }
+
+            if (_shapefileTempDbasePath != null)
+            {
+                if (File.Exists(_shapefileTempDbasePath))
+                {
+                    try
+                    {
+                        File.Delete(_shapefileTempDbasePath);
+                    }
+                    catch { }
+                }
+
+                _shapefileTempDbasePath = null;
             }
         }
 
@@ -296,7 +333,7 @@ namespace Catfood.Shapefile
                 for (int i = 0; i < _dbReader.FieldCount; i++ )
                 {
                     metadata.Add(_dbReader.GetName(i),
-                        _dbReader.GetString(i));
+                        _dbReader.GetValue(i).ToString());
                 }
 
                 // get the index record
