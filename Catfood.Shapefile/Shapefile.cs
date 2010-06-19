@@ -23,7 +23,7 @@ namespace Catfood.Shapefile
     public class Shapefile : IDisposable, IEnumerator<Shape>, IEnumerable<Shape>
     {
         private const string DbConnectionStringTemplate = @"Provider=Microsoft.Jet.OLEDB.4.0;Data Source={0};Extended Properties=dBase IV";
-        private const string DbSelectStringTemplate = "SELECT * FROM {0}";
+        private const string DbSelectStringTemplate = "SELECT * FROM [{0}]";
         private const string MainPathExtension = "shp";
         private const string IndexPathExtension = "shx";
         private const string DbasePathExtension = "dbf";
