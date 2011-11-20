@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------------
- * (c)copyright 2009 Catfood Software - http://www.catfood.net
+ * (c)copyright 2009-2011 Catfood Software - http://catfood.net/
  * Provided under the ms-PL license, see LICENSE.txt
  * ------------------------------------------------------------------------ */
 
