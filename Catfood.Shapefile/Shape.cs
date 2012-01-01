@@ -17,8 +17,8 @@ namespace Catfood.Shapefile
     /// </summary>
     public class Shape
     {
+        internal ShapeType _type;
         private int _recordNumber;
-        private ShapeType _type;
         private StringDictionary _metadata;
 
         /// <summary>

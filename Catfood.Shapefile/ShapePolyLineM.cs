@@ -13,11 +13,8 @@ namespace Catfood.Shapefile
     /// <summary>
     /// A Shapefile ShapePolyLineM Shape
     /// </summary>
-    public class ShapePolyLineM : Shape
+    public class ShapePolyLineM : ShapePolyLine
     {
-        private RectangleD _boundingBox;
-        private List<PointD[]> _parts;
-
         /// <summary>
         /// A Shapefile PolyLine Shape
         /// </summary>
@@ -27,27 +24,12 @@ namespace Catfood.Shapefile
         /// <exception cref="ArgumentNullException">Thrown if shapeData is null</exception>
         /// <exception cref="InvalidOperationException">Thrown if an error occurs parsing shapeData</exception>
         protected internal ShapePolyLineM(int recordNumber, StringDictionary metadata, byte[] shapeData)
-            : base(ShapeType.PolyLineM, recordNumber, metadata)
+            : base(recordNumber, metadata)
         {
+            _type = ShapeType.PolyLineM; 
+
             M = new List<double>();
             ParsePolyLineM(shapeData, out _boundingBox, out _parts);
-        }
-
-        /// <summary>
-        /// Gets the bounding box
-        /// </summary>
-        public RectangleD BoundingBox
-        {
-            get { return _boundingBox; }
-        }
-
-        /// <summary>
-        /// Gets a list of parts (segments) for the PolyLine. Each part
-        /// is an array of double precision points
-        /// </summary>
-        public List<PointD[]> Parts
-        {
-            get { return _parts; }
         }
 
         /// <summary>
