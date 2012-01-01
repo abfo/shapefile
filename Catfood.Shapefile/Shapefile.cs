@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------------
- * (c)copyright 2009-2011 Catfood Software - http://catfood.net
+ * (c)copyright 2009-2012 Catfood Software and contributors - http://catfood.net
  * Provided under the ms-PL license, see LICENSE.txt
  * ------------------------------------------------------------------------ */
 
@@ -22,7 +22,16 @@ namespace Catfood.Shapefile
     /// </remarks>
     public class Shapefile : IDisposable, IEnumerator<Shape>, IEnumerable<Shape>
     {
-        private const string DbConnectionStringTemplate = @"Provider=Microsoft.Jet.OLEDB.4.0;Data Source={0};Extended Properties=dBase IV";
+        /// <summary>
+        /// Jet connection string template
+        /// </summary>
+        public const string ConnectionStringTemplateJet = @"Provider=Microsoft.Jet.OLEDB.4.0;Data Source={0};Extended Properties=dBase IV";
+
+        /// <summary>
+        /// ACE connection string template
+        /// </summary>
+        public const string ConnectionStringTemplateAce = @"Provider=Microsoft.ACE.OLEDB.12.0;Data Source={0};Extended Properties=dBase IV";
+        
         private const string DbSelectStringTemplate = "SELECT * FROM [{0}]";
         private const string MainPathExtension = "shp";
         private const string IndexPathExtension = "shx";
@@ -45,14 +54,13 @@ namespace Catfood.Shapefile
         private OleDbConnection _dbConnection;
         private OleDbCommand _dbCommand;
         private OleDbDataReader _dbReader;
+        private string _connectionStringTemplate;
 
         /// <summary>
         /// Create a new Shapefile object.
         /// </summary>
         public Shapefile()
-        {
-            _currentIndex = -1;
-        }
+            : this(null, ConnectionStringTemplateJet) {}
 
         /// <summary>
         /// Create a new Shapefile object and open a Shapefile. Note that three files are required - 
@@ -62,13 +70,41 @@ namespace Catfood.Shapefile
         /// </summary>
         /// <param name="path">Path to the .shp, .shx or .dbf file for this Shapefile</param>
         /// <exception cref="ObjectDisposedException">Thrown if the Shapefile has been disposed</exception>
-        /// <exception cref="ArgumentNullException">Thrown if the path parameter is null</exception>
         /// <exception cref="ArgumentException">Thrown if the path parameter is empty</exception>
         /// <exception cref="FileNotFoundException">Thrown if one of the three required files is not found</exception>
         public Shapefile(string path)
-            : this()
+            : this(path, ConnectionStringTemplateJet) {}
+
+        /// <summary>
+        /// Create a new Shapefile object and open a Shapefile. Note that three files are required - 
+        /// the main file (.shp), the index file (.shx) and the dBASE table (.dbf). The three files 
+        /// must all have the same filename (i.e. shapes.shp, shapes.shx and shapes.dbf). Set path
+        /// to any one of these three files to open the Shapefile.
+        /// </summary>
+        /// <param name="path">Path to the .shp, .shx or .dbf file for this Shapefile</param>
+        /// <param name="connectionStringTemplate">Connection string template - use Shapefile.ConnectionStringTemplateJet
+        /// (the default), Shapefile.ConnectionStringTemplateAce or your own dBASE connection string</param>
+        /// <exception cref="ObjectDisposedException">Thrown if the Shapefile has been disposed</exception>
+        /// <exception cref="ArgumentNullException">Thrown if the connectionStringTemplate parameter is null</exception>
+        /// <exception cref="ArgumentException">Thrown if the path parameter is empty</exception>
+        /// <exception cref="FileNotFoundException">Thrown if one of the three required files is not found</exception>
+        public Shapefile(string path, string connectionStringTemplate)
         {
-            Open(path);
+            if (connectionStringTemplate == null)
+            {
+                throw new ArgumentNullException("connectionStringTemplate");
+            }
+
+            ConnectionStringTemplate = connectionStringTemplate;
+
+            if (path != null)
+            {
+                Open(path);
+            }
+            else
+            {
+                _currentIndex = -1;
+            }
         }
 
         /// <summary>
@@ -159,6 +195,16 @@ namespace Catfood.Shapefile
         }
 
         /// <summary>
+        /// Gets or sets the connection string template - use Shapefile.ConnectionStringTemplateJet
+        /// (the default), Shapefile.ConnectionStringTemplateAce or your own dBASE connection string
+        /// </summary>
+        public string ConnectionStringTemplate
+        {
+            get { return _connectionStringTemplate; }
+            set { _connectionStringTemplate = value; }
+        }
+
+        /// <summary>
         /// Gets the number of shapes in the Shapefile
         /// </summary>
         public int Count
@@ -225,7 +271,7 @@ namespace Catfood.Shapefile
                 safeDbasePath = _shapefileTempDbasePath;
             }
 
-            string connectionString = string.Format(DbConnectionStringTemplate,
+            string connectionString = string.Format(ConnectionStringTemplate,
                 Path.GetDirectoryName(safeDbasePath));
             string selectString = string.Format(DbSelectStringTemplate,
                 Path.GetFileNameWithoutExtension(safeDbasePath));
