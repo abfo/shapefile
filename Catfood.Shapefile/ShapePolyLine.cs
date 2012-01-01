@@ -15,8 +15,23 @@ namespace Catfood.Shapefile
     /// </summary>
     public class ShapePolyLine : Shape
     {
-        private RectangleD _boundingBox;
-        private List<PointD[]> _parts;
+        /// <summary>
+        /// Bounding Box
+        /// </summary>
+        internal RectangleD _boundingBox;
+
+        /// <summary>
+        /// List of parts
+        /// </summary>
+        internal List<PointD[]> _parts;
+
+        /// <summary>
+        /// A Shapefile PolyLine Shape
+        /// </summary>
+        /// <param name="recordNumber">The record number in the Shapefile</param>
+        /// <param name="metadata">Metadata about the shape</param>        
+        protected internal ShapePolyLine(int recordNumber, StringDictionary metadata)
+            : base(ShapeType.PolyLine, recordNumber, metadata) {}
 
         /// <summary>
         /// A Shapefile PolyLine Shape
