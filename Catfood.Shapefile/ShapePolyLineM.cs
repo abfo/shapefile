@@ -147,7 +147,7 @@ namespace Catfood.Shapefile
             M.Clear();
             for (int i = 0; i < numPoints; i++)
             {
-                double _m = EndianBitConverter.ToDouble(shapeData, 52 + 8 + (4 * numParts) + (16 * numPoints) + i * 8, ProvidedOrder.Little);
+                double _m = EndianBitConverter.ToDouble(shapeData, 52 + 16 + (4 * numParts) + (16 * numPoints) + i * 8, ProvidedOrder.Little);
                 M.Add(_m);
             }
         }
