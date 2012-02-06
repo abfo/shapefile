@@ -39,7 +39,7 @@ namespace Catfood.Shapefile
 
         private bool _disposed;
         private bool _opened;
-        private int _currentIndex;
+        private int _currentIndex = -1;
         private int _count;
         private RectangleD _boundingBox;
         private ShapeType _type;
@@ -100,10 +100,6 @@ namespace Catfood.Shapefile
             if (path != null)
             {
                 Open(path);
-            }
-            else
-            {
-                _currentIndex = -1;
             }
         }
 
