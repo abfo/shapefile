@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Text;
+using System.Data;
 
 namespace Catfood.Shapefile
 {
@@ -20,11 +21,12 @@ namespace Catfood.Shapefile
         /// </summary>
         /// <param name="recordNumber">The record number in the Shapefile</param>
         /// <param name="metadata">Metadata about the shape</param>
+        /// <param name="dataRecord">IDataRecord associated with the metadata</param>
         /// <param name="shapeData">The shape record as a byte array</param>
         /// <exception cref="ArgumentNullException">Thrown if shapeData is null</exception>
         /// <exception cref="InvalidOperationException">Thrown if an error occurs parsing shapeData</exception>
-        protected internal ShapePolyLineM(int recordNumber, StringDictionary metadata, byte[] shapeData)
-            : base(recordNumber, metadata)
+        protected internal ShapePolyLineM(int recordNumber, StringDictionary metadata, IDataRecord dataRecord, byte[] shapeData)
+            : base(recordNumber, metadata, dataRecord)
         {
             _type = ShapeType.PolyLineM; 
 

@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Text;
+using System.Data;
 
 namespace Catfood.Shapefile
 {
@@ -30,19 +31,21 @@ namespace Catfood.Shapefile
         /// </summary>
         /// <param name="recordNumber">The record number in the Shapefile</param>
         /// <param name="metadata">Metadata about the shape</param>        
-        protected internal ShapePolyLine(int recordNumber, StringDictionary metadata)
-            : base(ShapeType.PolyLine, recordNumber, metadata) {}
+        /// <param name="dataRecord">IDataRecord associated with the metadata</param>
+        protected internal ShapePolyLine(int recordNumber, StringDictionary metadata, IDataRecord dataRecord)
+            : base(ShapeType.PolyLine, recordNumber, metadata, dataRecord) {}
 
         /// <summary>
         /// A Shapefile PolyLine Shape
         /// </summary>
         /// <param name="recordNumber">The record number in the Shapefile</param>
         /// <param name="metadata">Metadata about the shape</param>
+        /// <param name="dataRecord">IDataRecord associated with the metadata</param>
         /// <param name="shapeData">The shape record as a byte array</param>
         /// <exception cref="ArgumentNullException">Thrown if shapeData is null</exception>
         /// <exception cref="InvalidOperationException">Thrown if an error occurs parsing shapeData</exception>
-        protected internal ShapePolyLine(int recordNumber, StringDictionary metadata, byte[] shapeData)
-            : base(ShapeType.PolyLine, recordNumber, metadata)
+        protected internal ShapePolyLine(int recordNumber, StringDictionary metadata, IDataRecord dataRecord, byte[] shapeData)
+            : base(ShapeType.PolyLine, recordNumber, metadata, dataRecord)
         {
             ParsePolyLineOrPolygon(shapeData, out _boundingBox, out _parts);
         }

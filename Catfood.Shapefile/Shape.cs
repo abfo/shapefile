@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Text;
+using System.Data;
 
 namespace Catfood.Shapefile
 {
@@ -20,6 +21,7 @@ namespace Catfood.Shapefile
         internal ShapeType _type;
         private int _recordNumber;
         private StringDictionary _metadata;
+        private IDataRecord _dataRecord;
 
         /// <summary>
         /// Base Shapefile shape - contains only the shape type and metadata plus helper methods.
@@ -28,17 +30,14 @@ namespace Catfood.Shapefile
         /// </summary>
         /// <param name="shapeType">The ShapeType of the shape</param>
         /// <param name="recordNumber">The record number in the Shapefile</param>
-        /// <param name="metadata">Metadata about the shape</param>
-        protected internal Shape(ShapeType shapeType, int recordNumber, StringDictionary metadata)
+        /// <param name="metadata">Metadata about the shape (optional)</param>
+        /// <param name="dataRecord">IDataRecord associated with the shape</param>
+        protected internal Shape(ShapeType shapeType, int recordNumber, StringDictionary metadata, IDataRecord dataRecord)
         {
-            if (metadata == null)
-            {
-                throw new ArgumentNullException("metadata");
-            }
-
             _type = shapeType;
             _metadata = metadata;
             _recordNumber = recordNumber;
+            _dataRecord = dataRecord;
         }
 
         /// <summary>
@@ -49,7 +48,7 @@ namespace Catfood.Shapefile
         /// <returns>The metadata string, or null if the requested name does not exist</returns>
         public string GetMetadata(string name)
         {
-            if (_metadata.ContainsKey(name))
+            if ((_metadata != null) && (_metadata.ContainsKey(name)))
             {
                 return _metadata[name];
             }
@@ -66,7 +65,7 @@ namespace Catfood.Shapefile
         /// <returns>Array of metadata names, or null of no metadata exists</returns>
         public string[] GetMetadataNames()
         {
-            if (_metadata.Keys.Count > 0)
+            if ((_metadata != null) && (_metadata.Keys.Count > 0))
             {
                 List<string> names = new List<string>(_metadata.Keys.Count);
                 foreach (string key in _metadata.Keys)
@@ -79,6 +78,14 @@ namespace Catfood.Shapefile
             {
                 return null;
             }
+        }
+
+        /// <summary>
+        /// Returns the IDataRecord associated with the shape metadata
+        /// </summary>
+        public IDataRecord DataRecord
+        {
+            get { return _dataRecord; }
         }
 
         /// <summary>
