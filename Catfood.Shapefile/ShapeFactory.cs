@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Text;
+using System.Data;
 
 namespace Catfood.Shapefile
 {
@@ -19,18 +20,14 @@ namespace Catfood.Shapefile
         /// Creates a Shape object (or derived object) from a shape record
         /// </summary>
         /// <param name="shapeData">The shape record as a byte array</param>
-        /// <param name="metadata">Metadata associated with this shape</param>
+        /// <param name="metadata">Metadata associated with this shape (optional)</param>
+        /// <param name="dataRecord">IDataRecord associated with the metadata</param>
         /// <returns>A Shape, or derived class</returns>
         /// <exception cref="ArgumentNullException">Thrown if shapeData or metadata are null</exception>
         /// <exception cref="ArgumentException">Thrown if shapeData is less than 12 bytes long</exception>
         /// <exception cref="InvalidOperationException">Thrown if an error occurs parsing shapeData</exception>
-        public static Shape ParseShape(byte[] shapeData, StringDictionary metadata)
+        public static Shape ParseShape(byte[] shapeData, StringDictionary metadata, IDataRecord dataRecord)
         {
-            if (metadata == null)
-            {
-                throw new ArgumentNullException("metadata");
-            }
-
             if (shapeData == null)
             {
                 throw new ArgumentNullException("shapeData");
@@ -66,27 +63,27 @@ namespace Catfood.Shapefile
             switch (shapeType)
             {
                 case ShapeType.Null:
-                    shape = new Shape(shapeType, recordNumber, metadata);
+                    shape = new Shape(shapeType, recordNumber, metadata, dataRecord);
                     break;
 
                 case ShapeType.Point:
-                    shape = new ShapePoint(recordNumber, metadata, shapeData);
+                    shape = new ShapePoint(recordNumber, metadata, dataRecord, shapeData);
                     break;
 
                 case ShapeType.MultiPoint:
-                    shape = new ShapeMultiPoint(recordNumber, metadata, shapeData);
+                    shape = new ShapeMultiPoint(recordNumber, metadata, dataRecord, shapeData);
                     break;
 
                 case ShapeType.PolyLine:
-                    shape = new ShapePolyLine(recordNumber, metadata, shapeData);
+                    shape = new ShapePolyLine(recordNumber, metadata, dataRecord, shapeData);
                     break;
 
                 case ShapeType.PolyLineM:
-                    shape = new ShapePolyLineM(recordNumber, metadata, shapeData);
+                    shape = new ShapePolyLineM(recordNumber, metadata, dataRecord, shapeData);
                     break;
 
                 case ShapeType.Polygon:
-                    shape = new ShapePolygon(recordNumber, metadata, shapeData);
+                    shape = new ShapePolygon(recordNumber, metadata, dataRecord, shapeData);
                     break;
 
                 default:

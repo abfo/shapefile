@@ -39,6 +39,7 @@ namespace Catfood.Shapefile
 
         private bool _disposed;
         private bool _opened;
+        private bool _rawMetadataOnly;
         private int _currentIndex = -1;
         private int _count;
         private RectangleD _boundingBox;
@@ -198,6 +199,17 @@ namespace Catfood.Shapefile
         {
             get { return _connectionStringTemplate; }
             set { _connectionStringTemplate = value; }
+        }
+
+        /// <summary>
+        /// If true then only the IDataRecord (DataRecord) property is available to access metadata for each shape.
+        /// If flase (the default) then metadata is also parsed into a string dictionary (use GetMetadataNames() and
+        /// GetMetadata() to access)
+        /// </summary>
+        public bool RawMetadataOnly
+        {
+            get { return _rawMetadataOnly; }
+            set { _rawMetadataOnly = value; }
         }
 
         /// <summary>
@@ -369,13 +381,17 @@ namespace Catfood.Shapefile
             {
                 if (_disposed) throw new ObjectDisposedException("Shapefile");
                 if (!_opened) throw new InvalidOperationException("Shapefile not open.");
-
+               
                 // get the metadata
-                StringDictionary metadata = new StringDictionary();
-                for (int i = 0; i < _dbReader.FieldCount; i++ )
+                StringDictionary metadata = null;
+                if (!RawMetadataOnly)
                 {
-                    metadata.Add(_dbReader.GetName(i),
-                        _dbReader.GetValue(i).ToString());
+                    metadata = new StringDictionary();
+                    for (int i = 0; i < _dbReader.FieldCount; i++)
+                    {
+                        metadata.Add(_dbReader.GetName(i),
+                            _dbReader.GetValue(i).ToString());
+                    }
                 }
 
                 // get the index record
@@ -391,7 +407,7 @@ namespace Catfood.Shapefile
                 _mainStream.Seek(contentOffsetInWords * 2, SeekOrigin.Begin);
                 _mainStream.Read(shapeData, 0, bytesToRead);
 
-                return ShapeFactory.ParseShape(shapeData, metadata);
+                return ShapeFactory.ParseShape(shapeData, metadata, _dbReader);
             }
         }
 

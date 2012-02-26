@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.IO;
 using Catfood.Shapefile;
+using System.Diagnostics;
 
 namespace ShapefileDemo
 {
@@ -52,7 +53,7 @@ namespace ShapefileDemo
                         Console.WriteLine("Metadata:");
                         foreach (string metadataName in metadataNames)
                         {
-                            Console.WriteLine("{0}={1}", metadataName, shape.GetMetadata(metadataName));
+                            Console.WriteLine("{0}={1} ({2})", metadataName, shape.GetMetadata(metadataName), shape.DataRecord.GetDataTypeName(shape.DataRecord.GetOrdinal(metadataName)));
                         }
                         Console.WriteLine();
                     }
