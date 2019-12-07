@@ -20,7 +20,7 @@ namespace Catfood.Shapefile
     /// <remarks>
     /// See the ESRI Shapefile specification at http://www.esri.com/library/whitepapers/pdfs/shapefile.pdf
     /// </remarks>
-    public class Shapefile : IDisposable, IEnumerator<Shape>, IEnumerable<Shape>
+    public class Shapefile : IDisposable, IEnumerable<Shape>
     {
         /// <summary>
         /// Jet connection string template
@@ -40,7 +40,6 @@ namespace Catfood.Shapefile
         private bool _disposed;
         private bool _opened;
         private bool _rawMetadataOnly;
-        private int _currentIndex = -1;
         private int _count;
         private RectangleD _boundingBox;
         private ShapeType _type;
@@ -53,9 +52,8 @@ namespace Catfood.Shapefile
         private Header _mainHeader;
         private Header _indexHeader;
         private OleDbConnection _dbConnection;
-        private OleDbCommand _dbCommand;
-        private OleDbDataReader _dbReader;
         private string _connectionStringTemplate;
+        private string _selectString;
 
         /// <summary>
         /// Create a new Shapefile object.
@@ -281,28 +279,16 @@ namespace Catfood.Shapefile
 
             string connectionString = string.Format(ConnectionStringTemplate,
                 Path.GetDirectoryName(safeDbasePath));
-            string selectString = string.Format(DbSelectStringTemplate,
+            _selectString = string.Format(DbSelectStringTemplate,
                 Path.GetFileNameWithoutExtension(safeDbasePath));
 
             _dbConnection = new OleDbConnection(connectionString);
             _dbConnection.Open();
-            _dbCommand = new OleDbCommand(selectString, _dbConnection);
-            _dbReader = _dbCommand.ExecuteReader();
+            
         }
 
         private void CloseDb()
         {
-            if (_dbReader != null)
-            {
-                _dbReader.Close();
-                _dbReader = null;
-            }
-
-            if (_dbCommand != null)
-            {
-                _dbCommand.Dispose();
-                _dbCommand = null;
-            }
 
             if (_dbConnection != null)
             {
@@ -368,109 +354,6 @@ namespace Catfood.Shapefile
             }
         }
 
-        #endregion
-
-        #region IEnumerator<Shape> Members
-
-        /// <summary>
-        /// Gets the current shape in the collection
-        /// </summary>
-        public Shape Current
-        {
-            get 
-            {
-                if (_disposed) throw new ObjectDisposedException("Shapefile");
-                if (!_opened) throw new InvalidOperationException("Shapefile not open.");
-               
-                // get the metadata
-                StringDictionary metadata = null;
-                if (!RawMetadataOnly)
-                {
-                    metadata = new StringDictionary();
-                    for (int i = 0; i < _dbReader.FieldCount; i++)
-                    {
-                        metadata.Add(_dbReader.GetName(i),
-                            _dbReader.GetValue(i).ToString());
-                    }
-                }
-
-                // get the index record
-                byte[] indexHeaderBytes = new byte[8];
-                _indexStream.Seek(Header.HeaderLength + _currentIndex * 8, SeekOrigin.Begin);
-                _indexStream.Read(indexHeaderBytes, 0, indexHeaderBytes.Length);
-                int contentOffsetInWords = EndianBitConverter.ToInt32(indexHeaderBytes, 0, ProvidedOrder.Big);
-                int contentLengthInWords = EndianBitConverter.ToInt32(indexHeaderBytes, 4, ProvidedOrder.Big);
-
-                // get the data chunk from the main file - need to factor in 8 byte record header
-                int bytesToRead = (contentLengthInWords * 2) + 8;
-                byte[] shapeData = new byte[bytesToRead];
-                _mainStream.Seek(contentOffsetInWords * 2, SeekOrigin.Begin);
-                _mainStream.Read(shapeData, 0, bytesToRead);
-
-                return ShapeFactory.ParseShape(shapeData, metadata, _dbReader);
-            }
-        }
-
-        #endregion
-
-        #region IEnumerator Members
-
-        /// <summary>
-        /// Gets the current item in the collection
-        /// </summary>
-        object System.Collections.IEnumerator.Current
-        {
-            get 
-            {
-                if (_disposed) throw new ObjectDisposedException("Shapefile");
-                if (!_opened) throw new InvalidOperationException("Shapefile not open.");
-
-                return this.Current; 
-            }
-        }
-
-        /// <summary>
-        /// Move to the next item in the collection (returns false if at the end)
-        /// </summary>
-        /// <returns>false if there are no more items in the collection</returns>
-        public bool MoveNext()
-        {
-            if (_disposed) throw new ObjectDisposedException("Shapefile");
-            if (!_opened) throw new InvalidOperationException("Shapefile not open.");
-
-            if (_currentIndex++ < (_count - 1))
-            {
-                // try to read the next database record
-                if (!_dbReader.Read())
-                {
-                    throw new InvalidOperationException("Metadata database does not contain a record for the next shape");
-                }
-
-                return true;
-            }
-            else
-            {
-                // reached the last shape
-                return false;
-            }
-        }
-
-        /// <summary>
-        /// Reset the enumerator
-        /// </summary>
-        public void Reset()
-        {
-            if (_disposed) throw new ObjectDisposedException("Shapefile");
-            if (!_opened) throw new InvalidOperationException("Shapefile not open.");
-
-            CloseDb();
-            OpenDb();
-            _currentIndex = -1;
-        }
-
-        #endregion
-
-        #region IEnumerable<Shape> Members
 
         /// <summary>
         /// Get the IEnumerator for this Shapefile
@@ -478,7 +361,9 @@ namespace Catfood.Shapefile
         /// <returns>IEnumerator</returns>
         public IEnumerator<Shape> GetEnumerator()
         {
-            return (IEnumerator<Shape>)this;
+
+            return new ShapeFileEnumerator(_dbConnection, _selectString, _rawMetadataOnly, _mainStream,
+                                          _indexStream, _count);
         }
 
         #endregion
@@ -487,7 +372,7 @@ namespace Catfood.Shapefile
 
         System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
         {
-            return (System.Collections.IEnumerator)this;
+            return GetEnumerator();
         }
 
         #endregion

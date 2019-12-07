@@ -68,6 +68,7 @@
     <Compile Include="Shape.cs" />
     <Compile Include="ShapeFactory.cs" />
     <Compile Include="Shapefile.cs" />
+    <Compile Include="ShapeFileEnumerator.cs" />
     <Compile Include="ShapeMultiPoint.cs" />
     <Compile Include="ShapePoint.cs" />
     <Compile Include="ShapePolygon.cs" />
