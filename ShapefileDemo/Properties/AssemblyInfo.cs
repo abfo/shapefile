@@ -10,7 +10,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Catfood Software")]
 [assembly: AssemblyProduct("ShapefileDemo")]
-[assembly: AssemblyCopyright("Copyright © 2009-2012 Catfood Software and contributors")]
+[assembly: AssemblyCopyright("Copyright © 2009-20129 Robert Ellison and contributors")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -29,5 +29,5 @@ using System.Runtime.InteropServices;
 //      Build Number
 //      Revision
 //
-[assembly: AssemblyVersion("1.51.0.0")]
-[assembly: AssemblyFileVersion("1.51.0.0")]
+[assembly: AssemblyVersion("1.60.0.0")]
+[assembly: AssemblyFileVersion("1.60.0.0")]

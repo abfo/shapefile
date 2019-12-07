@@ -1,4 +1,9 @@
-﻿using System;
+﻿/* ------------------------------------------------------------------------
+ * (c)copyright 2009-2019 Robert Ellison and contributors - https://github.com/abfo/shapefile
+ * Provided under the ms-PL license, see LICENSE.txt
+ * ------------------------------------------------------------------------ */
+
+using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Data.OleDb;
