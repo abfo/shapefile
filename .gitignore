@@ -79,3 +79,4 @@ _[Ss]cripts
 *.ide-shm
 *.ide-wal
 *.dtbcache
+/.vs/Catfood.Shapefile
