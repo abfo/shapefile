@@ -1,5 +1,5 @@
 /* ------------------------------------------------------------------------
- * (c)copyright 2009-2019 Robert Ellison and contributors - https://github.com/abfo/shapefile
+ * (c)copyright 2009-2023 Robert Ellison and contributors - https://github.com/abfo/shapefile
  * Provided under the ms-PL license, see LICENSE.txt
  * ------------------------------------------------------------------------ */
 

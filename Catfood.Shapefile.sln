@@ -1,18 +1,21 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.29306.81
+# Visual Studio Version 17
+VisualStudioVersion = 17.4.33213.308
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{D36F4D84-703A-481B-A660-D85038F13260}"
 	ProjectSection(SolutionItems) = preProject
 		.gitignore = .gitignore
-		LICENSE.txt = LICENSE.txt
-		README.txt = README.txt
+		Documentation.md = Documentation.md
+		README.md = README.md
+		LICENSE.md = LICENSE.md
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Catfood.Shapefile", "Catfood.Shapefile\Catfood.Shapefile.csproj", "{2086F1A5-3D34-40AD-80EF-C1943411451F}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ShapefileDemo", "ShapefileDemo\ShapefileDemo.csproj", "{D4C1A0B0-7811-46BF-8FB7-85760F0531DD}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Catfood.Shapefile", "Catfood.Shapefile\Catfood.Shapefile.csproj", "{5D4084A5-D43D-45A1-A1FB-547C80C4D5AD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Catfood.Shapefile.UnitTests", "Catfood.Shapefile.UnitTests\Catfood.Shapefile.UnitTests.csproj", "{46ED78C7-4D2E-4B9A-B04E-23A3EDC3CD67}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -20,14 +23,18 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{2086F1A5-3D34-40AD-80EF-C1943411451F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{2086F1A5-3D34-40AD-80EF-C1943411451F}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{2086F1A5-3D34-40AD-80EF-C1943411451F}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{2086F1A5-3D34-40AD-80EF-C1943411451F}.Release|Any CPU.Build.0 = Release|Any CPU
 		{D4C1A0B0-7811-46BF-8FB7-85760F0531DD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{D4C1A0B0-7811-46BF-8FB7-85760F0531DD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D4C1A0B0-7811-46BF-8FB7-85760F0531DD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D4C1A0B0-7811-46BF-8FB7-85760F0531DD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5D4084A5-D43D-45A1-A1FB-547C80C4D5AD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5D4084A5-D43D-45A1-A1FB-547C80C4D5AD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5D4084A5-D43D-45A1-A1FB-547C80C4D5AD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5D4084A5-D43D-45A1-A1FB-547C80C4D5AD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{46ED78C7-4D2E-4B9A-B04E-23A3EDC3CD67}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{46ED78C7-4D2E-4B9A-B04E-23A3EDC3CD67}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{46ED78C7-4D2E-4B9A-B04E-23A3EDC3CD67}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{46ED78C7-4D2E-4B9A-B04E-23A3EDC3CD67}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
