@@ -5,8 +5,10 @@
 
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Text;
 
+[assembly: InternalsVisibleTo("Catfood.Shapefile.UnitTests")]
 namespace Catfood.Shapefile
 {
     /// <summary>
@@ -88,7 +90,7 @@ namespace Catfood.Shapefile
     /// <summary>
     /// The header data for a Shapefile main file or Index file
     /// </summary>
-    class Header
+    internal class Header
     {
         /// <summary>
         /// The length of a Shapefile header in bytes

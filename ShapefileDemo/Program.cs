@@ -83,6 +83,19 @@ namespace ShapefileDemo
                             }
                             break;
 
+                        case ShapeType.PolyLine:
+                            ShapePolyLine shapePolyLine = shape as ShapePolyLine;
+                            foreach (PointD[] part in shapePolyLine.Parts)
+                            {
+                                Console.WriteLine("PolyLine part:");
+                                foreach (PointD point in part)
+                                {
+                                    Console.WriteLine("{0}, {1}", point.X, point.Y);
+                                }
+                                Console.WriteLine();
+                            }
+                            break;
+
                         default:
                             // and so on for other types...
                             break;
