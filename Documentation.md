@@ -1,43 +1,71 @@
-_Note: Catfood.Shapefile.dll is not thread safe. You should open, enumerate and then close (dispose) a shapefile on the same thread. Jet drivers are used to access shapefile metadata._
+# Using Catfood.Shapefile
 
-To get started add a reference to Catfood.Shapefile.dll and import the {{Catfood.Shapefile}} namespace.
+Catfood.Shapefile is not thread safe. Open, enumerate, and dispose a shapefile on the same thread.
 
-A shapefile consists of three files:
+Install the Catfood.Shapefile NuGet package and import the `Catfood.Shapefile` namespace. NuGet also installs the DbfDataReader dependency.
 
-* filename.shp - the main file containing shapes.
-* filename.shx - an index to the shapes in the main file.
-* filename.dbf - database containing metadata for each shape.
+A shapefile consists of three files with the same base filename:
 
-To enumerate shapes pass the path to any of these three files to the {{Shapefile}} constructor and then use the {{IEnumerable<Shape>}} interface as demonstrated below:
+* `filename.shp` contains shapes.
+* `filename.shx` indexes the shapes.
+* `filename.dbf` contains metadata for each shape.
 
-{code:c#}
-using (Shapefile shapefile = new Shapefile("my.shp")
+Pass the path to any of these files to the constructor, then enumerate shapes:
+
+```csharp
+using (Shapefile shapefile = new Shapefile("my.shp"))
 {
     foreach (Shape shape in shapefile)
     {
         Console.WriteLine("ShapeType: {0}", shape.Type);
     }
 }
-{code:c#}
+```
 
-{{Shape}} is the base class for a set of more specific classes - {{ShapePoint}}, {{ShapeMultiPoint}}, {{ShapePolyLine}} and {{ShapePolygon}}. Cast to the appropriate class based on the {{Type}} property:
+Alternatively, create a parameterless `Shapefile` and call `Open(path)` once. Dispose it before opening another dataset with a new instance. Failed opens release files and can be retried.
 
-{code:c#}
+`Shape` is the base class for `ShapePoint`, `ShapeMultiPoint`, `ShapePolyLine`, and `ShapePolygon`. Cast based on the `Type` property:
+
+```csharp
 switch (shape.Type)
 {
     case ShapeType.Point:
-        ShapePoint shapePoint = shape as ShapePoint;
-        Console.WriteLine("Point={0},{1}", shapePoint.Point.X, shapePoint.Point.Y);
+        ShapePoint point = (ShapePoint)shape;
+        Console.WriteLine("Point={0},{1}", point.Point.X, point.Point.Y);
         break;
-
-    // ...
 }
-{code:c#}
+```
 
-Access metadata for the shape using {{GetMetadataNames()}} to list available names (keys) and {{GetMetadata()}} to access metadata by name.
+## Metadata
 
-See the {{ShapefileDemo}} project for a sample command line application that dumps information for each shape in a shapefile. 
+Use `GetMetadataNames()` to list field names and `GetMetadata(name)` to read string values. Name lookup in this dictionary is case-insensitive. Missing field names return `null`; DBF null values become empty strings. Trailing padding is removed from character fields, while leading spaces are preserved. The DBF header's language driver determines character encoding; `.cpg` overrides are not currently read.
 
-Catfood.Shapefile uses the Jet driver to access shapefile metadata (stored in dBase format). The 32-bit version of this driver is almost certainly available on all systems. To use Catfood.Shapefile on 64-bit systems either target your application at x86 (it will then use the 32-bit Jet driver) or install the 64-bit Jet driver. From version 1.40 you can also change the default connection string template use to access shapefile metadata via a constructor overload. {{Shapefile.ConnectionStringTemplateJet}} is the default, {{Shapefile.ConnectionStringTemplateAce}} uses the ACE driver.
+For typed values, use `Shape.DataRecord`, which exposes DbfDataReader through `IDataRecord`. Set `RawMetadataOnly = true` before creating an enumerator to skip building the string dictionary:
 
-You may find it helpful to refer to the [ERSI Shapefile Technical Description](http://www.esri.com/library/whitepapers/pdfs/shapefile.pdf) (PDF) for details about the properties of each shape type.
+```csharp
+using (var shapefile = new Shapefile("my.shp") { RawMetadataOnly = true })
+{
+    foreach (Shape shape in shapefile)
+    {
+        var record = shape.DataRecord;
+        for (int i = 0; i < record.FieldCount; i++)
+            Console.WriteLine("{0}: {1}", record.GetName(i),
+                record.IsDBNull(i) ? "" : record.GetValue(i));
+    }
+}
+```
+
+The data record belongs to the live enumerator: read or copy its values before advancing, resetting, or disposing the enumerator, or disposing the shapefile. The string dictionary remains available on a retained shape. With `RawMetadataOnly`, `GetMetadataNames()` and `GetMetadata()` return `null`.
+
+DBF records match shapes by physical position. Records marked deleted are included so subsequent shapes retain the correct metadata. If a shape has no corresponding DBF row, enumeration throws `InvalidOperationException`. Enumeration can be repeated, and `Reset()` returns an enumerator to the start. Disposing the shapefile also closes its active enumerators.
+
+## Migrating from version 2
+
+Version 3 replaces `System.Data.OleDb` with [DbfDataReader 2.2.0](https://www.nuget.org/packages/DbfDataReader/2.2.0), resolving the missing Jet provider reported in [issue #3](https://github.com/abfo/shapefile/issues/3).
+
+* The library now targets **.NET Standard 2.1**. .NET Framework applications must migrate to a compatible runtime before upgrading. The sample and test projects target .NET 10.
+* Jet and ACE drivers, connection strings, and x86 targeting are no longer needed. DBF files are opened directly, including filenames longer than eight characters. Companion memo files (`.fpt`/`.dbt`, including uppercase extensions) are opened alongside the DBF when present.
+* The connection-string constructor overload, `ConnectionStringTemplate`, `ConnectionStringTemplateJet`, and `ConnectionStringTemplateAce` remain for source compatibility but are obsolete and ignored. Replace their usage with `new Shapefile(path)`.
+* `DataRecord` is backed by DbfDataReader rather than OleDb. Use `IsDBNull()`, `GetFieldType()`, and the appropriate typed getters or `GetValue()`; do not cast it to `OleDbDataReader` or assume Jet-specific numeric types or type names. DbfDataReader does not implement every optional `IDataRecord` operation, such as `GetBytes()`, `GetChars()`, or `GetData()`.
+
+See the `ShapefileDemo` project for a command-line application that dumps each shape, and the [ESRI Shapefile Technical Description](https://www.esri.com/library/whitepapers/pdfs/shapefile.pdf) for the file format.

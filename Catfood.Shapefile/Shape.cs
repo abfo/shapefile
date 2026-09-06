@@ -81,7 +81,8 @@ namespace Catfood.Shapefile
         }
 
         /// <summary>
-        /// Returns the IDataRecord associated with the shape metadata
+        /// Returns the IDataRecord associated with the shape metadata. Read its values before
+        /// advancing or resetting the enumerator, or disposing the enumerator or Shapefile.
         /// </summary>
         public IDataRecord DataRecord
         {
