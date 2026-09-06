@@ -39,7 +39,7 @@ namespace Catfood.Shapefile
         /// </summary>
         public RectangleD BoundingBox
         {
-            get { return _boundingBox; }
+            get { return _boundingBox.WithConvention(BoundingBoxConvention); }
         }
         
         /// <summary>
