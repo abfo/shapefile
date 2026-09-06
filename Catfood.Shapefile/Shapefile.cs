@@ -40,6 +40,7 @@ namespace Catfood.Shapefile
         private bool _disposed;
         private bool _opened;
         private bool _rawMetadataOnly;
+        private BoundingBoxConvention _boundingBoxConvention;
         private int _count;
         private RectangleD _boundingBox;
         private ShapeType _type;
@@ -88,6 +89,19 @@ namespace Catfood.Shapefile
         /// <exception cref="ArgumentException">Thrown if the path parameter is empty</exception>
         /// <exception cref="FileNotFoundException">Thrown if one of the three required files is not found</exception>
         public Shapefile(string path, string connectionStringTemplate)
+            : this(path, connectionStringTemplate, BoundingBoxConvention.Legacy) {}
+
+        /// <summary>Creates and opens a shapefile using the selected bounding-box convention.</summary>
+        /// <param name="path">Path to the .shp, .shx or .dbf file, or null to open later.</param>
+        /// <param name="boundingBoxConvention">Mapping of Y extents to Top and Bottom.</param>
+        public Shapefile(string path, BoundingBoxConvention boundingBoxConvention)
+            : this(path, ConnectionStringTemplateJet, boundingBoxConvention) {}
+
+        /// <summary>Creates and optionally opens a shapefile with a connection template and bounding-box convention.</summary>
+        /// <param name="path">Path to the .shp, .shx or .dbf file, or null to open later.</param>
+        /// <param name="connectionStringTemplate">The dBASE connection string template.</param>
+        /// <param name="boundingBoxConvention">Mapping of Y extents to Top and Bottom.</param>
+        public Shapefile(string path, string connectionStringTemplate, BoundingBoxConvention boundingBoxConvention)
         {
             if (connectionStringTemplate == null)
             {
@@ -95,6 +109,7 @@ namespace Catfood.Shapefile
             }
 
             ConnectionStringTemplate = connectionStringTemplate;
+            BoundingBoxConvention = boundingBoxConvention;
 
             if (path != null)
             {
@@ -211,6 +226,27 @@ namespace Catfood.Shapefile
         }
 
         /// <summary>
+        /// Gets or sets the convention for file and shape bounding boxes. Defaults to Legacy
+        /// (Top = YMin, Bottom = YMax). YUp uses Top = YMax, Bottom = YMin.
+        /// Set before opening the file; point coordinates are unaffected.
+        /// </summary>
+        /// <exception cref="ObjectDisposedException">The shapefile has been disposed.</exception>
+        /// <exception cref="InvalidOperationException">The shapefile is already open.</exception>
+        /// <exception cref="ArgumentOutOfRangeException">The convention is not supported.</exception>
+        public BoundingBoxConvention BoundingBoxConvention
+        {
+            get { return _boundingBoxConvention; }
+            set
+            {
+                if (_disposed) throw new ObjectDisposedException("Shapefile");
+                if (_opened) throw new InvalidOperationException("Set the bounding-box convention before opening the shapefile.");
+                if (value != BoundingBoxConvention.Legacy && value != BoundingBoxConvention.YUp)
+                    throw new ArgumentOutOfRangeException("value");
+                _boundingBoxConvention = value;
+            }
+        }
+
+        /// <summary>
         /// Gets the number of shapes in the Shapefile
         /// </summary>
         public int Count
@@ -234,7 +270,7 @@ namespace Catfood.Shapefile
                 if (_disposed) throw new ObjectDisposedException("Shapefile");
                 if (!_opened) throw new InvalidOperationException("Shapefile not open.");
 
-                return _boundingBox; 
+                return _boundingBox.WithConvention(_boundingBoxConvention);
             }
            
         }
@@ -363,7 +399,7 @@ namespace Catfood.Shapefile
         {
 
             return new ShapeFileEnumerator(_dbConnection, _selectString, _rawMetadataOnly, _mainStream,
-                                          _indexStream, _count);
+                                          _indexStream, _count, _boundingBoxConvention);
         }
 
         #endregion

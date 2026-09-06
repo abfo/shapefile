@@ -48,5 +48,13 @@ namespace Catfood.Shapefile
             Right = right;
             Bottom = bottom;
         }
+
+        // Parsed boxes use the legacy (xmin, ymin, xmax, ymax) mapping internally.
+        internal RectangleD WithConvention(BoundingBoxConvention convention)
+        {
+            return convention == BoundingBoxConvention.YUp
+                ? new RectangleD(Left, Bottom, Right, Top)
+                : this;
+        }
     }
 }

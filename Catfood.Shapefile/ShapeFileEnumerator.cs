@@ -1,4 +1,4 @@
-﻿/* ------------------------------------------------------------------------
+/* ------------------------------------------------------------------------
  * (c)copyright 2009-2019 Robert Ellison and contributors - https://github.com/abfo/shapefile
  * Provided under the ms-PL license, see LICENSE.txt
  * ------------------------------------------------------------------------ */
@@ -21,15 +21,17 @@ namespace Catfood.Shapefile
         private FileStream _mainStream;
         private FileStream _indexStream;
         private int _count;
+        private readonly BoundingBoxConvention _boundingBoxConvention;
 
         public ShapeFileEnumerator(OleDbConnection dbConnection, string selectString, bool rawMetadataOnly, FileStream mainStream,
-                                   FileStream indexStream, int count)
+                                   FileStream indexStream, int count, BoundingBoxConvention boundingBoxConvention)
         {
 
             _rawMetadataOnly = rawMetadataOnly;
             _mainStream = mainStream;
             _indexStream = indexStream;
             _count = count;
+            _boundingBoxConvention = boundingBoxConvention;
             _dbCommand = new OleDbCommand(selectString, dbConnection);
             _dbReader = _dbCommand.ExecuteReader();
         }
@@ -69,7 +71,7 @@ namespace Catfood.Shapefile
                 _mainStream.Seek(contentOffsetInWords * 2, SeekOrigin.Begin);
                 _mainStream.Read(shapeData, 0, bytesToRead);
 
-                return ShapeFactory.ParseShape(shapeData, metadata, _dbReader);
+                return ShapeFactory.ParseShape(shapeData, metadata, _dbReader, _boundingBoxConvention);
             }
         }
 
