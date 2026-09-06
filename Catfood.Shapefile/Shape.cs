@@ -48,8 +48,10 @@ namespace Catfood.Shapefile
         /// </summary>
         /// <param name="name">The name to retreieve</param>
         /// <returns>The metadata string, or null if the requested name does not exist</returns>
+        /// <exception cref="InvalidOperationException">The shapefile has no dBASE (.dbf) table.</exception>
         public string GetMetadata(string name)
         {
+            ThrowIfMetadataUnavailable();
             if ((_metadata != null) && (_metadata.ContainsKey(name)))
             {
                 return _metadata[name];
@@ -65,8 +67,10 @@ namespace Catfood.Shapefile
         /// null if not metadata exists.
         /// </summary>
         /// <returns>Array of metadata names, or null of no metadata exists</returns>
+        /// <exception cref="InvalidOperationException">The shapefile has no dBASE (.dbf) table.</exception>
         public string[] GetMetadataNames()
         {
+            ThrowIfMetadataUnavailable();
             if ((_metadata != null) && (_metadata.Keys.Count > 0))
             {
                 List<string> names = new List<string>(_metadata.Keys.Count);
@@ -86,9 +90,20 @@ namespace Catfood.Shapefile
         /// Returns the IDataRecord associated with the shape metadata. Read its values before
         /// advancing or resetting the enumerator, or disposing the enumerator or Shapefile.
         /// </summary>
+        /// <exception cref="InvalidOperationException">The shapefile has no dBASE (.dbf) table.</exception>
         public IDataRecord DataRecord
         {
-            get { return _dataRecord; }
+            get
+            {
+                ThrowIfMetadataUnavailable();
+                return _dataRecord;
+            }
+        }
+
+        private void ThrowIfMetadataUnavailable()
+        {
+            if (_metadata == null && _dataRecord == null)
+                throw new InvalidOperationException("Metadata is unavailable because the shapefile has no dBASE (.dbf) table.");
         }
 
         /// <summary>

@@ -35,6 +35,106 @@ namespace Catfood.Shapefile.UnitTests
         }
 
         [TestMethod]
+        public void ShpOnlySupportsShapeReadingResetAndIndependentEnumerators()
+        {
+            File.Delete(Path.ChangeExtension(_path, "shx"));
+            File.Delete(Path.ChangeExtension(_path, "dbf"));
+            using (var shapefile = new Shapefile())
+            {
+                shapefile.Open(_path);
+                Assert.AreEqual(3, shapefile.Count);
+                Assert.AreEqual(ShapeType.Point, shapefile.Type);
+                using (var first = shapefile.GetEnumerator())
+                using (var second = shapefile.GetEnumerator())
+                {
+                    Assert.IsTrue(first.MoveNext());
+                    Assert.IsTrue(first.MoveNext());
+                    Assert.IsTrue(second.MoveNext());
+                    Assert.AreEqual(2.0, ((ShapePoint)first.Current).Point.X);
+                    Assert.AreEqual(1.0, ((ShapePoint)second.Current).Point.X);
+                    first.Reset();
+                    Assert.IsTrue(first.MoveNext());
+                    Assert.AreEqual(1, first.Current.RecordNumber);
+                    while (first.MoveNext()) { }
+                    Assert.IsFalse(first.MoveNext());
+                }
+                var shapes = shapefile.ToList();
+                Assert.AreEqual(3, shapes.Count);
+                for (int i = 0; i < shapes.Count; i++)
+                {
+                    Assert.AreEqual(i + 1, shapes[i].RecordNumber);
+                    Assert.AreEqual(i + 1.0, ((ShapePoint)shapes[i]).Point.X);
+                    Assert.AreEqual(0.0, ((ShapePoint)shapes[i]).Point.Y);
+                }
+            }
+            using (File.Open(_path, FileMode.Open, FileAccess.ReadWrite, FileShare.None)) { }
+        }
+
+        [DataTestMethod]
+        [DataRow(false, false)]
+        [DataRow(false, true)]
+        [DataRow(true, false)]
+        [DataRow(true, true)]
+        public void MissingDbfThrowsOnEveryMetadataAccessor(bool keepIndex, bool rawMetadataOnly)
+        {
+            if (!keepIndex) File.Delete(Path.ChangeExtension(_path, "shx"));
+            File.Delete(Path.ChangeExtension(_path, "dbf"));
+            using (var shapefile = new Shapefile(_path) { RawMetadataOnly = rawMetadataOnly })
+            {
+                foreach (var shape in shapefile)
+                {
+                    Assert.ThrowsException<InvalidOperationException>(() => shape.GetMetadata("name"));
+                    Assert.ThrowsException<InvalidOperationException>(() => shape.GetMetadataNames());
+                    Assert.ThrowsException<InvalidOperationException>(() => { var record = shape.DataRecord; });
+                }
+            }
+        }
+
+        [TestMethod]
+        public void MissingIndexPreservesMetadataAlignment()
+        {
+            File.Delete(Path.ChangeExtension(_path, "shx"));
+            using (var shapefile = new Shapefile(_path))
+            {
+                Assert.AreEqual(3, shapefile.Count);
+                foreach (var shape in shapefile)
+                    Assert.AreEqual("row" + shape.RecordNumber, shape.GetMetadata("name"));
+            }
+        }
+
+        [DataTestMethod]
+        [DataRow("PAN_water_areas_dcw.shp", 30)]
+        [DataRow("PAN_water_lines_dcw.shp", 757)]
+        public void ShpOnlyReadsVariableLengthShapes(string filename, int expectedCount)
+        {
+            string path = Path.Combine(_directory, filename);
+            File.Copy(Path.Combine(AppContext.BaseDirectory, "TestData", filename), path);
+            using (var shapefile = new Shapefile(path))
+            {
+                Assert.AreEqual(expectedCount, shapefile.Count);
+                Assert.AreEqual(expectedCount, shapefile.ToList().Count);
+            }
+        }
+
+        [DataTestMethod]
+        [DataRow(-1)]
+        [DataRow(0)]
+        [DataRow(int.MaxValue)]
+        public void ShpOnlyRejectsInvalidRecordLengths(int length)
+        {
+            File.Delete(Path.ChangeExtension(_path, "shx"));
+            File.Delete(Path.ChangeExtension(_path, "dbf"));
+            using (var writer = new BinaryWriter(File.OpenWrite(_path)))
+            {
+                writer.BaseStream.Position = 104;
+                WriteBigEndian(writer, length);
+            }
+            using (var shapefile = new Shapefile())
+                Assert.ThrowsException<InvalidOperationException>(() => shapefile.Open(_path));
+            using (File.Open(_path, FileMode.Open, FileAccess.ReadWrite, FileShare.None)) { }
+        }
+
+        [TestMethod]
         public void LongFilenameAndDeletedRowsPreserveShapeMetadataAlignment()
         {
             using (var shapefile = new Shapefile(_path))

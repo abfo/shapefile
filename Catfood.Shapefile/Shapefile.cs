@@ -49,6 +49,7 @@ namespace Catfood.Shapefile
         private FileStream _indexStream;
         private Header _mainHeader;
         private Header _indexHeader;
+        private List<long> _recordOffsets;
         private string _connectionStringTemplate;
         private readonly HashSet<ShapeFileEnumerator> _enumerators = new HashSet<ShapeFileEnumerator>();
 
@@ -59,32 +60,32 @@ namespace Catfood.Shapefile
         { }
 
         /// <summary>
-        /// Create a new Shapefile object and open a Shapefile. Note that three files are required -
-        /// the main file (.shp), the index file (.shx) and the dBASE table (.dbf). The three files
+        /// Open a Shapefile. Only the main file (.shp) is required.
+        /// The index (.shx) and dBASE table (.dbf) are optional. Companion files
         /// must all have the same filename (i.e. shapes.shp, shapes.shx and shapes.dbf). Set path
-        /// to any one of these three files to open the Shapefile.
+        /// to any one of these three filenames to open the Shapefile. Without a .dbf file, metadata access throws InvalidOperationException.
         /// </summary>
         /// <param name="path">Path to the .shp, .shx or .dbf file for this Shapefile</param>
         /// <exception cref="ObjectDisposedException">Thrown if the Shapefile has been disposed</exception>
         /// <exception cref="ArgumentException">Thrown if the path parameter is empty</exception>
-        /// <exception cref="FileNotFoundException">Thrown if one of the three required files is not found</exception>
+        /// <exception cref="FileNotFoundException">Thrown if the main .shp file is not found</exception>
         public Shapefile(string path)
         {
             if (path != null) Open(path);
         }
 
         /// <summary>
-        /// Create a new Shapefile object and open a Shapefile. Note that three files are required -
-        /// the main file (.shp), the index file (.shx) and the dBASE table (.dbf). The three files
+        /// Open a Shapefile. Only the main file (.shp) is required.
+        /// The index (.shx) and dBASE table (.dbf) are optional. Companion files
         /// must all have the same filename (i.e. shapes.shp, shapes.shx and shapes.dbf). Set path
-        /// to any one of these three files to open the Shapefile.
+        /// to any one of these three filenames to open the Shapefile. Without a .dbf file, metadata access throws InvalidOperationException.
         /// </summary>
         /// <param name="path">Path to the .shp, .shx or .dbf file for this Shapefile</param>
         /// <param name="connectionStringTemplate">Legacy connection string template. Ignored; DBF files are read directly.</param>
         /// <exception cref="ObjectDisposedException">Thrown if the Shapefile has been disposed</exception>
         /// <exception cref="ArgumentNullException">Thrown if the connectionStringTemplate parameter is null</exception>
         /// <exception cref="ArgumentException">Thrown if the path parameter is empty</exception>
-        /// <exception cref="FileNotFoundException">Thrown if one of the three required files is not found</exception>
+        /// <exception cref="FileNotFoundException">Thrown if the main .shp file is not found</exception>
         [Obsolete("Use Shapefile(string path). DBF files are read directly; the connection string template is ignored.")]
         public Shapefile(string path, string connectionStringTemplate)
             : this(path, connectionStringTemplate, BoundingBoxConvention.Legacy) {}
@@ -120,16 +121,16 @@ namespace Catfood.Shapefile
         }
 
         /// <summary>
-        /// Create a new Shapefile object and open a Shapefile. Note that three files are required -
-        /// the main file (.shp), the index file (.shx) and the dBASE table (.dbf). The three files
+        /// Open a Shapefile. Only the main file (.shp) is required.
+        /// The index (.shx) and dBASE table (.dbf) are optional. Companion files
         /// must all have the same filename (i.e. shapes.shp, shapes.shx and shapes.dbf). Set path
-        /// to any one of these three files to open the Shapefile.
+        /// to any one of these three filenames to open the Shapefile. Without a .dbf file, metadata access throws InvalidOperationException.
         /// </summary>
         /// <param name="path">Path to the .shp, .shx or .dbf file for this Shapefile</param>
         /// <exception cref="ObjectDisposedException">Thrown if the Shapefile has been disposed</exception>
         /// <exception cref="ArgumentNullException">Thrown if the path parameter is null</exception>
         /// <exception cref="ArgumentException">Thrown if the path parameter is empty</exception>
-        /// <exception cref="FileNotFoundException">Thrown if one of the three required files is not found</exception>
+        /// <exception cref="FileNotFoundException">Thrown if the main .shp file is not found</exception>
         /// <exception cref="InvalidOperationException">Thrown if an error occurs parsing file headers</exception>
         public void Open(string path)
         {
@@ -159,26 +160,23 @@ namespace Catfood.Shapefile
             {
                 throw new FileNotFoundException("Shapefile main file not found", _shapefileMainPath);
             }
-            if (!File.Exists(_shapefileIndexPath))
-            {
-                throw new FileNotFoundException("Shapefile index file not found", _shapefileIndexPath);
-            }
             if (!File.Exists(_shapefileDbasePath))
             {
-                throw new FileNotFoundException("Shapefile dBase file not found", _shapefileDbasePath);
+                _shapefileDbasePath = null;
             }
 
             try
             {
                 _mainStream = File.Open(_shapefileMainPath, FileMode.Open, FileAccess.Read, FileShare.Read);
-                _indexStream = File.Open(_shapefileIndexPath, FileMode.Open, FileAccess.Read, FileShare.Read);
+                if (File.Exists(_shapefileIndexPath))
+                    _indexStream = File.Open(_shapefileIndexPath, FileMode.Open, FileAccess.Read, FileShare.Read);
 
                 if (_mainStream.Length < Header.HeaderLength)
                 {
                     throw new InvalidOperationException("Shapefile main file does not contain a valid header");
                 }
 
-                if (_indexStream.Length < Header.HeaderLength)
+                if (_indexStream != null && _indexStream.Length < Header.HeaderLength)
                 {
                     throw new InvalidOperationException("Shapefile index file does not contain a valid header");
                 }
@@ -187,19 +185,32 @@ namespace Catfood.Shapefile
                 byte[] headerBytes = new byte[Header.HeaderLength];
                 _mainStream.Read(headerBytes, 0, Header.HeaderLength);
                 _mainHeader = new Header(headerBytes);
-                _indexStream.Read(headerBytes, 0, Header.HeaderLength);
-                _indexHeader = new Header(headerBytes);
+                if (_indexStream != null)
+                {
+                    _indexStream.Read(headerBytes, 0, Header.HeaderLength);
+                    _indexHeader = new Header(headerBytes);
+                }
 
                 // set properties from the main header
                 _type = _mainHeader.ShapeType;
                 _boundingBox = new RectangleD(_mainHeader.XMin, _mainHeader.YMin, _mainHeader.XMax, _mainHeader.YMax);
 
-                // index header length is in 16-bit words, including the header - number of
-                // shapes is the number of records (each 4 workds long) after subtracting the header bytes
-                _count = (_indexHeader.FileLength - (Header.HeaderLength / 2)) / 4;
+                if (_indexStream != null)
+                {
+                    // Each index record contains four 16-bit words.
+                    _count = (_indexHeader.FileLength - (Header.HeaderLength / 2)) / 4;
+                }
+                else
+                {
+                    _recordOffsets = ReadRecordOffsets();
+                    _count = _recordOffsets.Count;
+                }
 
                 // open the metadata database
-                using (ShapeFileEnumerator.OpenMetadata(_shapefileDbasePath)) { }
+                if (_shapefileDbasePath != null)
+                {
+                    using (ShapeFileEnumerator.OpenMetadata(_shapefileDbasePath)) { }
+                }
 
                 _opened = true;
             }
@@ -211,6 +222,33 @@ namespace Catfood.Shapefile
                 _indexStream = null;
                 throw;
             }
+        }
+
+        private List<long> ReadRecordOffsets()
+        {
+            long fileLength = (long)_mainHeader.FileLength * 2;
+            if (fileLength < Header.HeaderLength || fileLength != _mainStream.Length)
+                throw new InvalidOperationException("Shapefile main file length does not match its header.");
+
+            var offsets = new List<long>();
+            var recordHeader = new byte[8];
+            long offset = Header.HeaderLength;
+            while (offset < fileLength)
+            {
+                _mainStream.Seek(offset, SeekOrigin.Begin);
+                if (fileLength - offset < recordHeader.Length ||
+                    _mainStream.Read(recordHeader, 0, recordHeader.Length) != recordHeader.Length)
+                    throw new InvalidOperationException("Shapefile contains a truncated record header.");
+
+                int contentLength = EndianBitConverter.ToInt32(recordHeader, 4, ProvidedOrder.Big);
+                long nextOffset = offset + 8 + (long)contentLength * 2;
+                if (contentLength < 2 || nextOffset > fileLength || (long)contentLength * 2 > int.MaxValue - 8)
+                    throw new InvalidOperationException("Shapefile contains an invalid record length.");
+
+                offsets.Add(offset);
+                offset = nextOffset;
+            }
+            return offsets;
         }
 
         /// <summary>
@@ -364,7 +402,7 @@ namespace Catfood.Shapefile
             if (!_opened) throw new InvalidOperationException("Shapefile not open.");
 
             var enumerator = new ShapeFileEnumerator(_shapefileDbasePath, _rawMetadataOnly, _mainStream,
-                _indexStream, _count, _boundingBoxConvention, disposed => _enumerators.Remove(disposed));
+                _indexStream, _recordOffsets, _count, _boundingBoxConvention, disposed => _enumerators.Remove(disposed));
             _enumerators.Add(enumerator);
             return enumerator;
         }

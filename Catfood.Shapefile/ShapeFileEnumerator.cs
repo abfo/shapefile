@@ -22,19 +22,21 @@ namespace Catfood.Shapefile
         private FileStream _mainStream;
         private FileStream _indexStream;
         private int _count;
+        private readonly List<long> _recordOffsets;
         private readonly BoundingBoxConvention _boundingBoxConvention;
 
         public ShapeFileEnumerator(string dbfPath, bool rawMetadataOnly, FileStream mainStream,
-                                   FileStream indexStream, int count, BoundingBoxConvention boundingBoxConvention,
+                                   FileStream indexStream, List<long> recordOffsets, int count, BoundingBoxConvention boundingBoxConvention,
                                    Action<ShapeFileEnumerator> onDispose)
         {
 
             _rawMetadataOnly = rawMetadataOnly;
             _mainStream = mainStream;
             _indexStream = indexStream;
+            _recordOffsets = recordOffsets;
             _count = count;
             _boundingBoxConvention = boundingBoxConvention;
-            _dbReader = OpenMetadata(dbfPath);
+            _dbReader = dbfPath == null ? null : OpenMetadata(dbfPath);
             _onDispose = onDispose;
         }
 
@@ -86,7 +88,7 @@ namespace Catfood.Shapefile
 
                 // get the metadata
                 StringDictionary metadata = null;
-                if (!_rawMetadataOnly)
+                if (_dbReader != null && !_rawMetadataOnly)
                 {
                     metadata = new StringDictionary();
                     for (int i = 0; i < _dbReader.FieldCount; i++)
@@ -98,15 +100,25 @@ namespace Catfood.Shapefile
 
                 // get the index record
                 byte[] indexHeaderBytes = new byte[8];
-                _indexStream.Seek(Header.HeaderLength + _currentIndex * 8, SeekOrigin.Begin);
-                _indexStream.Read(indexHeaderBytes, 0, indexHeaderBytes.Length);
-                int contentOffsetInWords = EndianBitConverter.ToInt32(indexHeaderBytes, 0, ProvidedOrder.Big);
+                long contentOffset;
+                if (_indexStream != null)
+                {
+                    _indexStream.Seek(Header.HeaderLength + (long)_currentIndex * 8, SeekOrigin.Begin);
+                    _indexStream.Read(indexHeaderBytes, 0, indexHeaderBytes.Length);
+                    contentOffset = (long)EndianBitConverter.ToInt32(indexHeaderBytes, 0, ProvidedOrder.Big) * 2;
+                }
+                else
+                {
+                    contentOffset = _recordOffsets[_currentIndex];
+                    _mainStream.Seek(contentOffset, SeekOrigin.Begin);
+                    _mainStream.Read(indexHeaderBytes, 0, indexHeaderBytes.Length);
+                }
                 int contentLengthInWords = EndianBitConverter.ToInt32(indexHeaderBytes, 4, ProvidedOrder.Big);
 
                 // get the data chunk from the main file - need to factor in 8 byte record header
                 int bytesToRead = (contentLengthInWords * 2) + 8;
                 byte[] shapeData = new byte[bytesToRead];
-                _mainStream.Seek(contentOffsetInWords * 2, SeekOrigin.Begin);
+                _mainStream.Seek(contentOffset, SeekOrigin.Begin);
                 _mainStream.Read(shapeData, 0, bytesToRead);
 
                 return ShapeFactory.ParseShape(shapeData, metadata, _dbReader, _boundingBoxConvention);
@@ -132,7 +144,7 @@ namespace Catfood.Shapefile
         {
             if (!_disposed)
             {
-                _dbReader.Dispose();
+                _dbReader?.Dispose();
                 _disposed = true;
                 _onDispose(this);
             }
@@ -148,7 +160,7 @@ namespace Catfood.Shapefile
             if (_currentIndex < (_count - 1))
             {
                 // try to read the next database record
-                if (!_dbReader.Read())
+                if (_dbReader != null && !_dbReader.Read())
                 {
                     throw new InvalidOperationException("Metadata database does not contain a record for the next shape");
                 }
@@ -170,7 +182,7 @@ namespace Catfood.Shapefile
         public void Reset()
         {
             ThrowIfDisposed();
-            _dbReader.Seek(0);
+            _dbReader?.Seek(0);
             _currentIndex = -1;
         }
 

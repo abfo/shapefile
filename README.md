@@ -6,11 +6,13 @@ Version 3 targets **.NET Standard 2.1** and reads DBF metadata directly using th
 
 Install the Catfood.Shapefile NuGet package and import the `Catfood.Shapefile` namespace. NuGet also installs the DbfDataReader dependency.
 
-A shapefile consists of three files with the same base filename:
+A shapefile can include three files with the same base filename:
 
 * `filename.shp` contains shapes.
 * `filename.shx` indexes the shapes.
 * `filename.dbf` contains metadata for each shape.
+
+Only the `.shp` file is required. When `.shx` is absent, the library scans the shape record headers to determine offsets and `Count`. When `.dbf` is absent, shapes can still be enumerated, but `GetMetadata()`, `GetMetadataNames()`, and `DataRecord` throw `InvalidOperationException` (including when `RawMetadataOnly` is true).
 
 Pass the path to any of these files to the constructor, then enumerate shapes:
 
