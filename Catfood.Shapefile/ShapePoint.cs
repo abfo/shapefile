@@ -17,6 +17,12 @@ namespace Catfood.Shapefile
     {
         private PointD _point;
 
+        internal ShapePoint(ShapeType type, int recordNumber, StringDictionary metadata, IDataRecord dataRecord,
+            ShapeRecordData data) : base(type, recordNumber, metadata, dataRecord)
+        {
+            _point = data.Point;
+        }
+
         /// <summary>
         /// A Shapefile Point Shape
         /// </summary>

@@ -26,6 +26,13 @@ namespace Catfood.Shapefile
         /// </summary>
         internal List<PointD[]> _parts;
 
+        internal ShapePolyLine(ShapeType type, int recordNumber, StringDictionary metadata, IDataRecord dataRecord,
+            ShapeRecordData data) : base(type, recordNumber, metadata, dataRecord)
+        {
+            _boundingBox = data.BoundingBox;
+            _parts = data.Parts;
+        }
+
         /// <summary>
         /// A Shapefile PolyLine Shape
         /// </summary>

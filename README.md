@@ -1,6 +1,6 @@
 # Catfood.Shapefile
 
-A .NET library for read-only enumeration of ESRI shapefiles and their metadata. Supported 2D shapes include Point, MultiPoint, PolyLine and Polygon.
+A .NET library for read-only enumeration of ESRI shapefiles and their metadata. Supports all fourteen shape types in the ESRI specification: Null, Point, MultiPoint, PolyLine, Polygon, their M and Z variants, and MultiPatch.
 
 Version 3 targets **.NET Standard 2.1** and reads DBF metadata directly using the [DbfDataReader 2.2.0 NuGet package](https://www.nuget.org/packages/DbfDataReader/2.2.0). No Jet/ACE installation, OLE DB provider, connection string, or x86 process is required. **.NET Framework is no longer supported**; applications must use a runtime that supports .NET Standard 2.1.
 
@@ -44,6 +44,42 @@ switch (shape.Type)
 }
 ```
 
+## Measured and 3D shapes
+
+M variants derive from their 2D shape classes; Z variants derive from their M
+variants. For example, `ShapePolygonZ` inherits `Parts` and `BoundingBox` from
+`ShapePolygon`, measures from `ShapePolygonM`, and adds Z values. The `Type`
+property always identifies the actual record type.
+
+* `ShapePointM` exposes `M`; `ShapePointZ` also exposes `Z`. XY coordinates remain in `Point`.
+* `ShapeMultiPointM`, `ShapePolyLineM`, and `ShapePolygonM` expose `Mmin`, `Mmax`, and `List<double> M`.
+* Their Z variants also expose `Zmin`, `Zmax`, and `List<double> Z`.
+* `ShapeMultiPatch` exposes `BoundingBox`, `Parts`, M and Z ranges/lists, and a `PartTypes` array aligned with `Parts`. `MultiPatchPartType` identifies triangle strips, triangle fans, outer rings, inner rings, first rings, and rings.
+
+M and Z lists follow vertex order, concatenated across parts. Use cumulative part
+lengths to find each part's values. Part order and coordinates are preserved;
+MultiPatch surfaces are read as stored, without triangulation or topology repair.
+
+All measured and Z shapes expose `HasM`, indicating whether measures were stored.
+An omitted optional measure block yields an empty `M` list and `NaN` for its
+range; an omitted PointZ measure yields `M = NaN`. PointM requires its measure.
+Stored measures below `-1e38` are ESRI no-data values and are returned unchanged,
+including in ranges. `HasM` remains true for a stored block of no-data values.
+Z coordinates and Z ranges/arrays are required for Z shapes and MultiPatch.
+
+```csharp
+if (shape is ShapePolyLineZ line)
+{
+    int index = 0;
+    foreach (PointD[] part in line.Parts)
+        foreach (PointD point in part)
+        {
+            Console.WriteLine($"{point.X}, {point.Y}, {line.Z[index]}");
+            index++;
+        }
+}
+```
+
 ## Bounding boxes
 
 Bounding boxes default to `BoundingBoxConvention.Legacy`:
@@ -58,7 +94,7 @@ using (var shapefile = new Shapefile("my.shp", BoundingBoxConvention.YUp))
 ```
 
 The convention applies to the file and all enumerated MultiPoint, PolyLine,
-PolyLineM and Polygon bounding boxes. Point coordinates and metadata are unchanged.
+Polygon (including M/Z variants), and MultiPatch bounding boxes. Point coordinates and metadata are unchanged.
 Constructors without an explicit convention retain the legacy mapping.
 When using the parameterless constructor, set `BoundingBoxConvention` before
 calling `Open`; changing it after opening throws `InvalidOperationException`.

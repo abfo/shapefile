@@ -58,7 +58,7 @@ namespace Catfood.Shapefile
             ShapeType shapeType = (ShapeType)EndianBitConverter.ToInt32(shapeData, 8, ProvidedOrder.Little);
 
             // test that we have the expected amount of data - need to take the 8 byte header into account
-            if (shapeData.Length != (contentLengthInWords * 2) + 8)
+            if (shapeData.Length != (contentLengthInWords * 2L) + 8)
             {
                 throw new InvalidOperationException("Shape data length does not match shape header length");
             }
@@ -89,6 +89,38 @@ namespace Catfood.Shapefile
 
                 case ShapeType.Polygon:
                     shape = new ShapePolygon(recordNumber, metadata, dataRecord, shapeData);
+                    break;
+
+                case ShapeType.PointM:
+                    shape = new ShapePointM(recordNumber, metadata, dataRecord, shapeData);
+                    break;
+
+                case ShapeType.PointZ:
+                    shape = new ShapePointZ(recordNumber, metadata, dataRecord, shapeData);
+                    break;
+
+                case ShapeType.MultiPointM:
+                    shape = new ShapeMultiPointM(recordNumber, metadata, dataRecord, shapeData);
+                    break;
+
+                case ShapeType.MultiPointZ:
+                    shape = new ShapeMultiPointZ(recordNumber, metadata, dataRecord, shapeData);
+                    break;
+
+                case ShapeType.PolyLineZ:
+                    shape = new ShapePolyLineZ(recordNumber, metadata, dataRecord, shapeData);
+                    break;
+
+                case ShapeType.PolygonM:
+                    shape = new ShapePolygonM(recordNumber, metadata, dataRecord, shapeData);
+                    break;
+
+                case ShapeType.PolygonZ:
+                    shape = new ShapePolygonZ(recordNumber, metadata, dataRecord, shapeData);
+                    break;
+
+                case ShapeType.MultiPatch:
+                    shape = new ShapeMultiPatch(recordNumber, metadata, dataRecord, shapeData);
                     break;
 
                 default:

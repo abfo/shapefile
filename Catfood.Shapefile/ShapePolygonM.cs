@@ -11,22 +11,22 @@ using System.Data;
 
 namespace Catfood.Shapefile
 {
-    /// <summary>A Shapefile PolyLineM shape.</summary>
-    public class ShapePolyLineM : ShapePolyLine
+    /// <summary>A Shapefile PolygonM shape.</summary>
+    public class ShapePolygonM : ShapePolygon
     {
-        /// <summary>Creates a Shapefile PolyLineM shape from a record.</summary>
+        /// <summary>Creates a Shapefile PolygonM shape from a record.</summary>
         /// <param name="recordNumber">The record number in the Shapefile.</param>
         /// <param name="metadata">Metadata about the shape (optional).</param>
         /// <param name="dataRecord">IDataRecord associated with the metadata.</param>
         /// <param name="shapeData">The shape record, including its eight-byte header.</param>
         /// <exception cref="ArgumentNullException">Thrown if shapeData is null.</exception>
         /// <exception cref="InvalidOperationException">Thrown if the record layout is invalid.</exception>
-        protected internal ShapePolyLineM(int recordNumber, StringDictionary metadata, IDataRecord dataRecord, byte[] shapeData)
-            : this(ShapeType.PolyLineM, recordNumber, metadata, dataRecord, ShapeRecordData.Parse(shapeData, true, false))
+        protected internal ShapePolygonM(int recordNumber, StringDictionary metadata, IDataRecord dataRecord, byte[] shapeData)
+            : this(ShapeType.PolygonM, recordNumber, metadata, dataRecord, ShapeRecordData.Parse(shapeData, true, false))
         {
         }
 
-        internal ShapePolyLineM(ShapeType type, int recordNumber, StringDictionary metadata, IDataRecord dataRecord,
+        internal ShapePolygonM(ShapeType type, int recordNumber, StringDictionary metadata, IDataRecord dataRecord,
             ShapeRecordData data) : base(type, recordNumber, metadata, dataRecord, data)
         {
             HasM = data.HasM;

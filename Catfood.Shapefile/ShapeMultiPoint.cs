@@ -18,6 +18,13 @@ namespace Catfood.Shapefile
         private RectangleD _boundingBox;
         private PointD[] _points;
 
+        internal ShapeMultiPoint(ShapeType type, int recordNumber, StringDictionary metadata, IDataRecord dataRecord,
+            ShapeRecordData data) : base(type, recordNumber, metadata, dataRecord)
+        {
+            _boundingBox = data.BoundingBox;
+            _points = data.Points;
+        }
+
         /// <summary>
         /// A Shapefile MultiPoint Shape
         /// </summary>

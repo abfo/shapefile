@@ -19,6 +19,13 @@ namespace Catfood.Shapefile
         private RectangleD _boundingBox;
         private List<PointD[]> _parts;
 
+        internal ShapePolygon(ShapeType type, int recordNumber, StringDictionary metadata, IDataRecord dataRecord,
+            ShapeRecordData data) : base(type, recordNumber, metadata, dataRecord)
+        {
+            _boundingBox = data.BoundingBox;
+            _parts = data.Parts;
+        }
+
         /// <summary>
         /// A Shapefile Polygon Shape
         /// </summary>
