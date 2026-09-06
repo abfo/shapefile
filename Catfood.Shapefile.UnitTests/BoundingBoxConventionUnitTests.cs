@@ -41,9 +41,9 @@ namespace Catfood.Shapefile.UnitTests
         public void FileAndEnumeratedBoundsUseIndependentConventions(string filename)
         {
             string path = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location),
-                "..", "..", "..", "TestData", filename);
+                "TestData", filename);
             using (var legacy = new Shapefile(path))
-            using (var yUp = new Shapefile(path, Shapefile.ConnectionStringTemplateJet, BoundingBoxConvention.YUp))
+            using (var yUp = new Shapefile(path, BoundingBoxConvention.YUp))
             using (var configured = new Shapefile())
             {
                 configured.BoundingBoxConvention = BoundingBoxConvention.YUp;

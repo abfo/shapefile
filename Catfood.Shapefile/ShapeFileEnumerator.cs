@@ -6,7 +6,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
-using System.Data.OleDb;
+using DbfDataReader;
 using System.IO;
 using System.Text;
 
@@ -14,8 +14,9 @@ namespace Catfood.Shapefile
 {
     class ShapeFileEnumerator : IEnumerator<Shape>
     {
-        private OleDbCommand _dbCommand;
-        private OleDbDataReader _dbReader;
+        private readonly DbfDataReader.DbfDataReader _dbReader;
+        private readonly Action<ShapeFileEnumerator> _onDispose;
+        private bool _disposed;
         private int _currentIndex = -1;
         private bool _rawMetadataOnly;
         private FileStream _mainStream;
@@ -23,8 +24,9 @@ namespace Catfood.Shapefile
         private int _count;
         private readonly BoundingBoxConvention _boundingBoxConvention;
 
-        public ShapeFileEnumerator(OleDbConnection dbConnection, string selectString, bool rawMetadataOnly, FileStream mainStream,
-                                   FileStream indexStream, int count, BoundingBoxConvention boundingBoxConvention)
+        public ShapeFileEnumerator(string dbfPath, bool rawMetadataOnly, FileStream mainStream,
+                                   FileStream indexStream, int count, BoundingBoxConvention boundingBoxConvention,
+                                   Action<ShapeFileEnumerator> onDispose)
         {
 
             _rawMetadataOnly = rawMetadataOnly;
@@ -32,8 +34,40 @@ namespace Catfood.Shapefile
             _indexStream = indexStream;
             _count = count;
             _boundingBoxConvention = boundingBoxConvention;
-            _dbCommand = new OleDbCommand(selectString, dbConnection);
-            _dbReader = _dbCommand.ExecuteReader();
+            _dbReader = OpenMetadata(dbfPath);
+            _onDispose = onDispose;
+        }
+
+        internal static DbfDataReader.DbfDataReader OpenMetadata(string path)
+        {
+            // Own the streams until construction succeeds so malformed DBF/memo headers
+            // cannot leave files open inside a partially constructed dependency object.
+            var stream = File.Open(path, FileMode.Open, FileAccess.Read, FileShare.Read);
+            FileStream memoStream = null;
+            try
+            {
+                foreach (string extension in new[] { "fpt", "FPT", "dbt", "DBT" })
+                {
+                    string memoPath = Path.ChangeExtension(path, extension);
+                    if (File.Exists(memoPath))
+                    {
+                        memoStream = File.Open(memoPath, FileMode.Open, FileAccess.Read, FileShare.Read);
+                        break;
+                    }
+                }
+                return new DbfDataReader.DbfDataReader(stream, memoStream, new DbfDataReaderOptions
+                {
+                    // DBF records correspond to shapes by physical position, including deleted rows.
+                    SkipDeletedRecords = false,
+                    StringTrimming = StringTrimmingOption.TrimEnd
+                });
+            }
+            catch
+            {
+                memoStream?.Dispose();
+                stream.Dispose();
+                throw;
+            }
         }
 
 
@@ -46,6 +80,10 @@ namespace Catfood.Shapefile
         {
             get
             {
+                ThrowIfDisposed();
+                if (_currentIndex < 0 || _currentIndex >= _count)
+                    throw new InvalidOperationException("Enumerator is not positioned on a shape.");
+
                 // get the metadata
                 StringDictionary metadata = null;
                 if (!_rawMetadataOnly)
@@ -54,7 +92,7 @@ namespace Catfood.Shapefile
                     for (int i = 0; i < _dbReader.FieldCount; i++)
                     {
                         metadata.Add(_dbReader.GetName(i),
-                            _dbReader.GetValue(i).ToString());
+                            _dbReader.GetValue(i)?.ToString() ?? string.Empty);
                     }
                 }
 
@@ -92,8 +130,12 @@ namespace Catfood.Shapefile
 
         public void Dispose()
         {
-            _dbReader.Close();
-            _dbCommand.Dispose();
+            if (!_disposed)
+            {
+                _dbReader.Dispose();
+                _disposed = true;
+                _onDispose(this);
+            }
         }
 
         /// <summary>
@@ -102,8 +144,8 @@ namespace Catfood.Shapefile
         /// <returns>false if there are no more items in the collection</returns>
         public bool MoveNext()
         {
-
-            if (_currentIndex++ < (_count - 1))
+            ThrowIfDisposed();
+            if (_currentIndex < (_count - 1))
             {
                 // try to read the next database record
                 if (!_dbReader.Read())
@@ -111,11 +153,13 @@ namespace Catfood.Shapefile
                     throw new InvalidOperationException("Metadata database does not contain a record for the next shape");
                 }
 
+                _currentIndex++;
                 return true;
             }
             else
             {
                 // reached the last shape
+                _currentIndex = _count;
                 return false;
             }
         }
@@ -125,9 +169,14 @@ namespace Catfood.Shapefile
         /// </summary>
         public void Reset()
         {
-            _dbReader.Close();
-            _dbReader = _dbCommand.ExecuteReader();
+            ThrowIfDisposed();
+            _dbReader.Seek(0);
             _currentIndex = -1;
+        }
+
+        private void ThrowIfDisposed()
+        {
+            if (_disposed) throw new ObjectDisposedException("ShapeFileEnumerator");
         }
 
         #endregion

@@ -1,6 +1,6 @@
-﻿<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="Current">
+<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="Current">
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFramework>netstandard2.1</TargetFramework>
     <FileUpgradeFlags>
     </FileUpgradeFlags>
     <OldToolsVersion>2.0</OldToolsVersion>
@@ -15,18 +15,12 @@
     <PackageProjectUrl>https://ithoughthecamewithyou.com/post/esri-shapefile-reader-in-net</PackageProjectUrl>
     <RepositoryUrl>https://github.com/abfo/shapefile</RepositoryUrl>
     <PackageTags>shapefile, esri</PackageTags>
-    <PackageReleaseNotes>First NuGet release, migrated to .NET Standard 2.0</PackageReleaseNotes>
-    <Version>2.0.0</Version>
+    <PackageReleaseNotes>Replaced OleDb/Jet with DbfDataReader for direct DBF access. Now targets .NET Standard 2.1; .NET Framework is no longer supported. Legacy connection string APIs are obsolete and ignored.</PackageReleaseNotes>
+    <Version>3.0.0</Version>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageIcon>catfood_128.png</PackageIcon>
     <PackageLicenseFile>LICENSE.md</PackageLicenseFile>
     <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
     <None Include="..\catfood_128.png">
@@ -43,7 +37,6 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="System.Data.OleDb" Version="7.0.0" />
-    <PackageReference Include="System.Runtime" Version="4.3.1" />
+    <PackageReference Include="DbfDataReader" Version="2.2.0" />
   </ItemGroup>
 </Project>

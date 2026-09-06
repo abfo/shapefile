@@ -1,4 +1,4 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -16,8 +16,8 @@ namespace Catfood.Shapefile.UnitTests
         public void ParseFirstPointSuccess()
         {
             string shapefilePath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location),
-                "..\\..\\..\\TestData\\PAN_water_lines_dcw.shp");
-            
+                "TestData", "PAN_water_lines_dcw.shp");
+
             using (Shapefile shapefile = new Shapefile(shapefilePath))
             {
                 Assert.AreEqual(ShapeType.PolyLine, shapefile.Type);
@@ -26,7 +26,7 @@ namespace Catfood.Shapefile.UnitTests
                 Assert.AreEqual(7.23685458952989, shapefile.BoundingBox.Top, 0.001);
                 Assert.AreEqual(-77.2360076059741, shapefile.BoundingBox.Right, 0.001);
                 Assert.AreEqual(9.61545560060634, shapefile.BoundingBox.Bottom, 0.001);
-                
+
                 foreach (Shape shape in shapefile)
                 {
                     Assert.AreEqual(ShapeType.PolyLine, shape.Type);

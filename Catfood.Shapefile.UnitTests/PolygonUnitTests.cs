@@ -1,4 +1,4 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,7 +17,7 @@ namespace Catfood.Shapefile.UnitTests
         public void ParseFirstPointSuccess()
         {
             string shapefilePath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location),
-                "..\\..\\..\\TestData\\PAN_water_areas_dcw.shp");
+                "TestData", "PAN_water_areas_dcw.shp");
 
             using (Shapefile shapefile = new Shapefile(shapefilePath))
             {
