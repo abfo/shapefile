@@ -1,6 +1,11 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿/* ------------------------------------------------------------------------
+ * (c)copyright Robert Ellison and contributors 
+ * Provided under the ms-PL license, see LICENSE.txt
+ * https://github.com/abfo/shapefile
+ * ------------------------------------------------------------------------ */
+
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
-using Catfood.Shapefile;
 
 namespace Catfood.Shapefile.UnitTests
 {

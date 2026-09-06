@@ -1,14 +1,14 @@
 /* ------------------------------------------------------------------------
- * (c)copyright 2009-2019 Robert Ellison and contributors - https://github.com/abfo/shapefile
+ * (c)copyright Robert Ellison and contributors 
  * Provided under the ms-PL license, see LICENSE.txt
+ * https://github.com/abfo/shapefile
  * ------------------------------------------------------------------------ */
 
+using DbfDataReader;
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
-using DbfDataReader;
 using System.IO;
-using System.Text;
 
 namespace Catfood.Shapefile
 {

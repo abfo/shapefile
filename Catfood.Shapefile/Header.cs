@@ -1,12 +1,11 @@
 /* ------------------------------------------------------------------------
- * (c)copyright 2009-2019 Robert Ellison and contributors - https://github.com/abfo/shapefile
+ * (c)copyright Robert Ellison and contributors 
  * Provided under the ms-PL license, see LICENSE.txt
+ * https://github.com/abfo/shapefile
  * ------------------------------------------------------------------------ */
 
 using System;
-using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using System.Text;
 
 [assembly: InternalsVisibleTo("Catfood.Shapefile.UnitTests")]
 namespace Catfood.Shapefile

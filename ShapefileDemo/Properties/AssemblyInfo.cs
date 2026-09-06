@@ -1,5 +1,10 @@
-﻿using System.Reflection;
-using System.Runtime.CompilerServices;
+﻿/* ------------------------------------------------------------------------
+ * (c)copyright Robert Ellison and contributors 
+ * Provided under the ms-PL license, see LICENSE.txt
+ * https://github.com/abfo/shapefile
+ * ------------------------------------------------------------------------ */
+
+using System.Reflection;
 using System.Runtime.InteropServices;
 
 // General Information about an assembly is controlled through the following 

@@ -1,3 +1,9 @@
+/* ------------------------------------------------------------------------
+ * (c)copyright Robert Ellison and contributors 
+ * Provided under the ms-PL license, see LICENSE.txt
+ * https://github.com/abfo/shapefile
+ * ------------------------------------------------------------------------ */
+
 namespace Catfood.Shapefile
 {
     /// <summary>Controls how shapefile Y extents map to rectangle edges.</summary>

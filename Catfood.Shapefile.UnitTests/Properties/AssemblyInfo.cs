@@ -1,5 +1,10 @@
+/* ------------------------------------------------------------------------
+ * (c)copyright Robert Ellison and contributors 
+ * Provided under the ms-PL license, see LICENSE.txt
+ * https://github.com/abfo/shapefile
+ * ------------------------------------------------------------------------ */
+
 using System.Reflection;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 [assembly: AssemblyTitle("Catfood.Shapefile.UnitTests")]

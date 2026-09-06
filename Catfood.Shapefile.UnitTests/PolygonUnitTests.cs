@@ -1,10 +1,10 @@
+/* ------------------------------------------------------------------------
+ * (c)copyright Robert Ellison and contributors 
+ * Provided under the ms-PL license, see LICENSE.txt
+ * https://github.com/abfo/shapefile
+ * ------------------------------------------------------------------------ */
+
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Catfood.Shapefile;
 using System.IO;
 using System.Reflection;
 
