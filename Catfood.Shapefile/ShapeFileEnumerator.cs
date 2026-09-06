@@ -22,15 +22,18 @@ namespace Catfood.Shapefile
         private FileStream _mainStream;
         private FileStream _indexStream;
         private int _count;
+        private readonly BoundingBoxConvention _boundingBoxConvention;
 
         public ShapeFileEnumerator(string dbfPath, bool rawMetadataOnly, FileStream mainStream,
-                                   FileStream indexStream, int count, Action<ShapeFileEnumerator> onDispose)
+                                   FileStream indexStream, int count, BoundingBoxConvention boundingBoxConvention,
+                                   Action<ShapeFileEnumerator> onDispose)
         {
 
             _rawMetadataOnly = rawMetadataOnly;
             _mainStream = mainStream;
             _indexStream = indexStream;
             _count = count;
+            _boundingBoxConvention = boundingBoxConvention;
             _dbReader = OpenMetadata(dbfPath);
             _onDispose = onDispose;
         }
@@ -106,7 +109,7 @@ namespace Catfood.Shapefile
                 _mainStream.Seek(contentOffsetInWords * 2, SeekOrigin.Begin);
                 _mainStream.Read(shapeData, 0, bytesToRead);
 
-                return ShapeFactory.ParseShape(shapeData, metadata, _dbReader);
+                return ShapeFactory.ParseShape(shapeData, metadata, _dbReader, _boundingBoxConvention);
             }
         }
 

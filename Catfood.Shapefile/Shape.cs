@@ -19,6 +19,8 @@ namespace Catfood.Shapefile
     public class Shape
     {
         internal ShapeType _type;
+        // Set once by the factory before the shape is returned to the caller.
+        internal BoundingBoxConvention BoundingBoxConvention { get; set; }
         private int _recordNumber;
         private StringDictionary _metadata;
         private IDataRecord _dataRecord;

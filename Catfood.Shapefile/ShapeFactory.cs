@@ -28,6 +28,12 @@ namespace Catfood.Shapefile
         /// <exception cref="InvalidOperationException">Thrown if an error occurs parsing shapeData</exception>
         public static Shape ParseShape(byte[] shapeData, StringDictionary metadata, IDataRecord dataRecord)
         {
+            return ParseShape(shapeData, metadata, dataRecord, BoundingBoxConvention.Legacy);
+        }
+
+        internal static Shape ParseShape(byte[] shapeData, StringDictionary metadata, IDataRecord dataRecord,
+            BoundingBoxConvention boundingBoxConvention)
+        {
             if (shapeData == null)
             {
                 throw new ArgumentNullException("shapeData");
@@ -90,6 +96,7 @@ namespace Catfood.Shapefile
                     throw new NotImplementedException(string.Format("Shapetype {0} is not implemented", shapeType));
             }
 
+            shape.BoundingBoxConvention = boundingBoxConvention;
             return shape;
         }
     }

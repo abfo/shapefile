@@ -36,6 +36,26 @@ switch (shape.Type)
 }
 ```
 
+## Bounding boxes
+
+Bounding boxes default to `BoundingBoxConvention.Legacy`:
+`Left = XMin`, `Top = YMin`, `Right = XMax`, `Bottom = YMax`.
+For Y-up coordinates, opt in to `Top = YMax` and `Bottom = YMin`:
+
+```csharp
+using (var shapefile = new Shapefile("my.shp", BoundingBoxConvention.YUp))
+{
+    RectangleD bounds = shapefile.BoundingBox;
+}
+```
+
+The convention applies to the file and all enumerated MultiPoint, PolyLine,
+PolyLineM and Polygon bounding boxes. Point coordinates and metadata are unchanged.
+Constructors without an explicit convention retain the legacy mapping.
+When using the parameterless constructor, set `BoundingBoxConvention` before
+calling `Open`; changing it after opening throws `InvalidOperationException`.
+`RectangleD` itself continues to store its constructor arguments as supplied.
+
 ## Metadata
 
 Use `GetMetadataNames()` to list field names and `GetMetadata(name)` to read string values. Name lookup in this dictionary is case-insensitive. Missing field names return `null`; DBF null values become empty strings. Trailing padding is removed from character fields, while leading spaces are preserved. The DBF header's language driver determines character encoding; `.cpg` overrides are not currently read.
@@ -65,7 +85,7 @@ Version 3 replaces `System.Data.OleDb` with [DbfDataReader 2.2.0](https://www.nu
 
 * The library now targets **.NET Standard 2.1**. .NET Framework applications must migrate to a compatible runtime before upgrading. The sample and test projects target .NET 10.
 * Jet and ACE drivers, connection strings, and x86 targeting are no longer needed. DBF files are opened directly, including filenames longer than eight characters. Companion memo files (`.fpt`/`.dbt`, including uppercase extensions) are opened alongside the DBF when present.
-* The connection-string constructor overload, `ConnectionStringTemplate`, `ConnectionStringTemplateJet`, and `ConnectionStringTemplateAce` remain for source compatibility but are obsolete and ignored. Replace their usage with `new Shapefile(path)`.
+* The connection-string constructor overloads, `ConnectionStringTemplate`, `ConnectionStringTemplateJet`, and `ConnectionStringTemplateAce` remain for source compatibility but are obsolete; connection string templates are ignored. Replace their usage with `new Shapefile(path)` or `new Shapefile(path, BoundingBoxConvention.YUp)` to retain an explicit bounding-box convention.
 * `DataRecord` is backed by DbfDataReader rather than OleDb. Use `IsDBNull()`, `GetFieldType()`, and the appropriate typed getters or `GetValue()`; do not cast it to `OleDbDataReader` or assume Jet-specific numeric types or type names. DbfDataReader does not implement every optional `IDataRecord` operation, such as `GetBytes()`, `GetChars()`, or `GetData()`.
 
 See the `ShapefileDemo` project for a command-line application that dumps each shape, and the [ESRI Shapefile Technical Description](https://www.esri.com/library/whitepapers/pdfs/shapefile.pdf) for the file format.
