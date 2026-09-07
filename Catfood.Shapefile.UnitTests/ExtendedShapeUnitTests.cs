@@ -37,7 +37,7 @@ namespace Catfood.Shapefile.UnitTests
                     {
                         if (type == ShapeType.PointM && !measures) continue;
                         byte[] record = CreateRecord(type, measures);
-                        Shape shape = ShapeFactory.ParseShape(record, metadata, reader, BoundingBoxConvention.YUp);
+                        Shape shape = ShapeFactory.ParseShape(record, metadata, reader);
                         Assert.AreEqual("Shape" + type, shape.GetType().Name);
                         Assert.AreEqual(type, shape.Type);
                         Assert.AreEqual(7, shape.RecordNumber);
@@ -59,7 +59,7 @@ namespace Catfood.Shapefile.UnitTests
                             Assert.AreEqual(6.0, bounds.Right);
                             Assert.AreEqual(9.0, bounds.Top);
                             Assert.AreEqual(2.0, bounds.Bottom);
-                            Shape legacy = ShapeFactory.ParseShape(record, metadata, reader);
+                            Shape legacy = ShapeFactory.ParseShape(record, metadata, reader, BoundingBoxConvention.Legacy);
                             Assert.AreEqual(2.0, Property<RectangleD>(legacy, "BoundingBox").Top);
                             Assert.AreEqual(9.0, Property<RectangleD>(legacy, "BoundingBox").Bottom);
                             PointD[] points;

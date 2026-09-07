@@ -24,9 +24,9 @@ namespace Catfood.Shapefile.UnitTests
                 Assert.AreEqual(ShapeType.PolyLine, shapefile.Type);
                 Assert.AreEqual(757, shapefile.Count);
                 Assert.AreEqual(-83.032531823292, shapefile.BoundingBox.Left, 0.001);
-                Assert.AreEqual(7.23685458952989, shapefile.BoundingBox.Top, 0.001);
+                Assert.AreEqual(9.61545560060634, shapefile.BoundingBox.Top, 0.001);
                 Assert.AreEqual(-77.2360076059741, shapefile.BoundingBox.Right, 0.001);
-                Assert.AreEqual(9.61545560060634, shapefile.BoundingBox.Bottom, 0.001);
+                Assert.AreEqual(7.23685458952989, shapefile.BoundingBox.Bottom, 0.001);
 
                 foreach (Shape shape in shapefile)
                 {

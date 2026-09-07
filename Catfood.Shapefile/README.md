@@ -82,12 +82,12 @@ if (shape is ShapePolyLineZ line)
 
 ## Bounding boxes
 
-Bounding boxes default to `BoundingBoxConvention.Legacy`:
-`Left = XMin`, `Top = YMin`, `Right = XMax`, `Bottom = YMax`.
-For Y-up coordinates, opt in to `Top = YMax` and `Bottom = YMin`:
+Bounding boxes default to `BoundingBoxConvention.YUp`:
+`Left = XMin`, `Top = YMax`, `Right = XMax`, `Bottom = YMin`.
+To retain the original mapping (`Top = YMin`, `Bottom = YMax`), select `Legacy`:
 
 ```csharp
-using (var shapefile = new Shapefile("my.shp", BoundingBoxConvention.YUp))
+using (var shapefile = new Shapefile("my.shp", BoundingBoxConvention.Legacy))
 {
     RectangleD bounds = shapefile.BoundingBox;
 }
@@ -95,7 +95,7 @@ using (var shapefile = new Shapefile("my.shp", BoundingBoxConvention.YUp))
 
 The convention applies to the file and all enumerated MultiPoint, PolyLine,
 Polygon (including M/Z variants), and MultiPatch bounding boxes. Point coordinates and metadata are unchanged.
-Constructors without an explicit convention retain the legacy mapping.
+Constructors without an explicit convention use Y-up coordinates.
 When using the parameterless constructor, set `BoundingBoxConvention` before
 calling `Open`; changing it after opening throws `InvalidOperationException`.
 `RectangleD` itself continues to store its constructor arguments as supplied.

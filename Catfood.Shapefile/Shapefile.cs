@@ -26,7 +26,7 @@ namespace Catfood.Shapefile
         private bool _disposed;
         private bool _opened;
         private bool _rawMetadataOnly;
-        private BoundingBoxConvention _boundingBoxConvention;
+        private BoundingBoxConvention _boundingBoxConvention = BoundingBoxConvention.YUp;
         private int _count;
         private RectangleD _boundingBox;
         private ShapeType _type;
@@ -221,8 +221,8 @@ namespace Catfood.Shapefile
         }
 
         /// <summary>
-        /// Gets or sets the convention for file and shape bounding boxes. Defaults to Legacy
-        /// (Top = YMin, Bottom = YMax). YUp uses Top = YMax, Bottom = YMin.
+        /// Gets or sets the convention for file and shape bounding boxes. Defaults to YUp
+        /// (Top = YMax, Bottom = YMin). Legacy uses Top = YMin, Bottom = YMax.
         /// Set before opening the file; point coordinates are unaffected.
         /// </summary>
         /// <exception cref="ObjectDisposedException">The shapefile has been disposed.</exception>

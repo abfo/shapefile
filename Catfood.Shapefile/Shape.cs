@@ -20,7 +20,7 @@ namespace Catfood.Shapefile
     {
         internal ShapeType _type;
         // Set once by the factory before the shape is returned to the caller.
-        internal BoundingBoxConvention BoundingBoxConvention { get; set; }
+        internal BoundingBoxConvention BoundingBoxConvention { get; set; } = BoundingBoxConvention.YUp;
         private int _recordNumber;
         private StringDictionary _metadata;
         private IDataRecord _dataRecord;

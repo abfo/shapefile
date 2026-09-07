@@ -26,10 +26,12 @@ namespace Catfood.Shapefile.UnitTests
             {
                 byte[] record = CreateRecord(type, ys[0], ys[1]);
                 var metadata = new StringDictionary { { "name", "test" } };
-                Shape legacy = ShapeFactory.ParseShape(record, metadata, null);
+                Shape legacy = ShapeFactory.ParseShape(record, metadata, null, BoundingBoxConvention.Legacy);
+                Shape defaultShape = ShapeFactory.ParseShape(record, metadata, null);
                 Shape yUp = ShapeFactory.ParseShape(record, metadata, null, BoundingBoxConvention.YUp);
                 AssertBounds(GetBounds(legacy), -4, ys[0], 6, ys[1]);
                 AssertBounds(GetBounds(yUp), -4, ys[1], 6, ys[0]);
+                Assert.AreEqual(GetBounds(yUp), GetBounds(defaultShape));
                 // Reading repeatedly must not swap the stored edges back and forth.
                 AssertBounds(GetBounds(yUp), -4, ys[1], 6, ys[0]);
                 CollectionAssert.AreEqual(GetPoints(legacy), GetPoints(yUp));
@@ -48,20 +50,24 @@ namespace Catfood.Shapefile.UnitTests
         {
             string path = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location),
                 "TestData", filename);
-            using (var legacy = new Shapefile(path))
+            using (var legacy = new Shapefile(path, BoundingBoxConvention.Legacy))
             using (var yUp = new Shapefile(path, BoundingBoxConvention.YUp))
+            using (var defaultFile = new Shapefile(path))
             using (var configured = new Shapefile())
             {
-                configured.BoundingBoxConvention = BoundingBoxConvention.YUp;
+                Assert.AreEqual(BoundingBoxConvention.YUp, configured.BoundingBoxConvention);
+                configured.BoundingBoxConvention = BoundingBoxConvention.Legacy;
                 configured.Open(path);
                 var expected = legacy.BoundingBox;
                 AssertBounds(yUp.BoundingBox, expected.Left, expected.Bottom, expected.Right, expected.Top);
-                Assert.AreEqual(yUp.BoundingBox, configured.BoundingBox);
+                Assert.AreEqual(legacy.BoundingBox, configured.BoundingBox);
+                Assert.AreEqual(yUp.BoundingBox, defaultFile.BoundingBox);
+                Assert.AreEqual(BoundingBoxConvention.YUp, defaultFile.BoundingBoxConvention);
                 Assert.AreEqual(BoundingBoxConvention.Legacy, legacy.BoundingBoxConvention);
                 Assert.ThrowsException<InvalidOperationException>(() => yUp.BoundingBoxConvention = BoundingBoxConvention.Legacy);
                 Assert.AreEqual(legacy.Count, yUp.Count);
                 using (var a = legacy.GetEnumerator())
-                using (var b = yUp.GetEnumerator())
+                using (var b = defaultFile.GetEnumerator())
                 {
                     while (a.MoveNext())
                     {
@@ -85,7 +91,7 @@ namespace Catfood.Shapefile.UnitTests
         [TestMethod]
         public void ConfigurationAndRectangleConstructorPreserveContracts()
         {
-            using (var file = new Shapefile(null, BoundingBoxConvention.YUp))
+            using (var file = new Shapefile(null))
             {
                 Assert.AreEqual(BoundingBoxConvention.YUp, file.BoundingBoxConvention);
                 Assert.ThrowsException<ArgumentOutOfRangeException>(() => file.BoundingBoxConvention = (BoundingBoxConvention)99);

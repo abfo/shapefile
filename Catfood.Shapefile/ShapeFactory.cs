@@ -27,7 +27,7 @@ namespace Catfood.Shapefile
         /// <exception cref="InvalidOperationException">Thrown if an error occurs parsing shapeData</exception>
         public static Shape ParseShape(byte[] shapeData, StringDictionary metadata, IDataRecord dataRecord)
         {
-            return ParseShape(shapeData, metadata, dataRecord, BoundingBoxConvention.Legacy);
+            return ParseShape(shapeData, metadata, dataRecord, BoundingBoxConvention.YUp);
         }
 
         internal static Shape ParseShape(byte[] shapeData, StringDictionary metadata, IDataRecord dataRecord,
