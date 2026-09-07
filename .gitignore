@@ -81,3 +81,4 @@ _[Ss]cripts
 *.dtbcache
 /.vs/Catfood.Shapefile
 /.vs/ProjectEvaluation
+/ShapefileDemo/Properties/launchSettings.json

@@ -19,18 +19,6 @@ namespace Catfood.Shapefile
     /// </remarks>
     public class Shapefile : IDisposable, IEnumerable<Shape>
     {
-        /// <summary>
-        /// Jet connection string template
-        /// </summary>
-        [Obsolete("DBF files are read directly. Connection string templates are ignored.")]
-        public const string ConnectionStringTemplateJet = @"Provider=Microsoft.Jet.OLEDB.4.0;Data Source={0};Extended Properties=dBase IV";
-
-        /// <summary>
-        /// ACE connection string template
-        /// </summary>
-        [Obsolete("DBF files are read directly. Connection string templates are ignored.")]
-        public const string ConnectionStringTemplateAce = @"Provider=Microsoft.ACE.OLEDB.12.0;Data Source={0};Extended Properties=dBase IV";
-
         private const string MainPathExtension = "shp";
         private const string IndexPathExtension = "shx";
         private const string DbasePathExtension = "dbf";
@@ -50,7 +38,6 @@ namespace Catfood.Shapefile
         private Header _mainHeader;
         private Header _indexHeader;
         private List<long> _recordOffsets;
-        private string _connectionStringTemplate;
         private readonly HashSet<ShapeFileEnumerator> _enumerators = new HashSet<ShapeFileEnumerator>();
 
         /// <summary>
@@ -74,22 +61,6 @@ namespace Catfood.Shapefile
             if (path != null) Open(path);
         }
 
-        /// <summary>
-        /// Open a Shapefile. Only the main file (.shp) is required.
-        /// The index (.shx) and dBASE table (.dbf) are optional. Companion files
-        /// must all have the same filename (i.e. shapes.shp, shapes.shx and shapes.dbf). Set path
-        /// to any one of these three filenames to open the Shapefile. Without a .dbf file, metadata access throws InvalidOperationException.
-        /// </summary>
-        /// <param name="path">Path to the .shp, .shx or .dbf file for this Shapefile</param>
-        /// <param name="connectionStringTemplate">Legacy connection string template. Ignored; DBF files are read directly.</param>
-        /// <exception cref="ObjectDisposedException">Thrown if the Shapefile has been disposed</exception>
-        /// <exception cref="ArgumentNullException">Thrown if the connectionStringTemplate parameter is null</exception>
-        /// <exception cref="ArgumentException">Thrown if the path parameter is empty</exception>
-        /// <exception cref="FileNotFoundException">Thrown if the main .shp file is not found</exception>
-        [Obsolete("Use Shapefile(string path). DBF files are read directly; the connection string template is ignored.")]
-        public Shapefile(string path, string connectionStringTemplate)
-            : this(path, connectionStringTemplate, BoundingBoxConvention.Legacy) {}
-
         /// <summary>Creates and opens a shapefile using the selected bounding-box convention.</summary>
         /// <param name="path">Path to the .shp, .shx or .dbf file, or null to open later.</param>
         /// <param name="boundingBoxConvention">Mapping of Y extents to Top and Bottom.</param>
@@ -97,27 +68,6 @@ namespace Catfood.Shapefile
         {
             BoundingBoxConvention = boundingBoxConvention;
             if (path != null) Open(path);
-        }
-
-        /// <summary>Creates and optionally opens a shapefile with a connection template and bounding-box convention.</summary>
-        /// <param name="path">Path to the .shp, .shx or .dbf file, or null to open later.</param>
-        /// <param name="connectionStringTemplate">Legacy connection string template. Ignored; DBF files are read directly.</param>
-        /// <param name="boundingBoxConvention">Mapping of Y extents to Top and Bottom.</param>
-        [Obsolete("Use Shapefile(string path, BoundingBoxConvention boundingBoxConvention). DBF files are read directly; the connection string template is ignored.")]
-        public Shapefile(string path, string connectionStringTemplate, BoundingBoxConvention boundingBoxConvention)
-        {
-            if (connectionStringTemplate == null)
-            {
-                throw new ArgumentNullException("connectionStringTemplate");
-            }
-
-            _connectionStringTemplate = connectionStringTemplate;
-            BoundingBoxConvention = boundingBoxConvention;
-
-            if (path != null)
-            {
-                Open(path);
-            }
         }
 
         /// <summary>
@@ -257,16 +207,6 @@ namespace Catfood.Shapefile
         public void Close()
         {
             Dispose();
-        }
-
-        /// <summary>
-        /// Gets or sets the legacy connection string template. Ignored; DBF files are read directly.
-        /// </summary>
-        [Obsolete("DBF files are read directly. Connection string templates are ignored.")]
-        public string ConnectionStringTemplate
-        {
-            get { return _connectionStringTemplate; }
-            set { _connectionStringTemplate = value; }
         }
 
         /// <summary>
