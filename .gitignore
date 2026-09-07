@@ -82,3 +82,4 @@ _[Ss]cripts
 /.vs/Catfood.Shapefile
 /.vs/ProjectEvaluation
 /ShapefileDemo/Properties/launchSettings.json
+/artifacts/

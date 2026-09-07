@@ -145,3 +145,51 @@ dotnet run --project ShapefileDemo --configuration Release -- TestData/PAN_water
 ```
 
 The supplied test settings run tests in a 64-bit process. Omit `--settings test.runsettings` to use the test runner's default architecture.
+
+## Signed NuGet releases
+
+Run `setup/build.ps1` on Windows x64 with PowerShell 7.4 or later, the .NET 10
+SDK, Azure CLI, and the [Visual C++ x64 runtime](https://aka.ms/vs/17/release/vc_redist.x64.exe).
+The script installs a pinned [.NET Sign CLI](https://github.com/dotnet/sign)
+under `artifacts/tools`. It uses Azure Artifact Signing directly; the Windows
+SDK SignTool and signing dlib used for installer signing are not needed.
+
+```powershell
+az login --scope https://codesigning.azure.net/.default
+pwsh -File .\setup\build.ps1 -Version 3.0.0
+```
+
+Omit `-Version` to use the version in the library project. `setup/metadata.json`
+contains the endpoint, account and certificate profile from the Catfood Earth
+example. Use `-MetadataPath <path>` to select another configuration. The Azure
+CLI identity needs the Artifact Signing Certificate Profile Signer role on the
+account/profile, and the profile must issue publicly trusted signing certificates.
+
+The script runs Release tests, packs the library, signs and timestamps the
+`.nupkg` using SHA-256, verifies it with `dotnet nuget verify --all`, and extracts
+the primary signer certificate from `.signature.p7s`. It signs the package;
+it does not add Authenticode signatures to the contained DLLs. Any failure stops
+the release. Each run uses a new directory under `artifacts/releases`;
+only a successful run creates a `ready` folder containing the `.nupkg` and
+matching DER-encoded `.cer`. Intermediate files remain under `staging`.
+Ordinary IDE/build output is unsigned; publish the package from `ready`.
+
+Before uploading that package, register its `.cer` in your NuGet.org account's
+Certificates section (or the owning organization's account), following
+[NuGet's certificate registration instructions](https://learn.microsoft.com/en-us/nuget/create-packages/sign-a-package#register-the-certificate-on-nugetorg).
+Artifact Signing rotates certificates, so use the certificate extracted from
+each release and register it if its SHA-256 fingerprint is not already listed.
+The script prints the fingerprint and expiration date. Timestamping preserves
+signature validity after certificate expiration. The script does not publish
+the package or change your NuGet.org account.
+
+To extract the certificate again from an existing signed package:
+
+```powershell
+pwsh -File .\setup\Export-PackageCertificate.ps1 -PackagePath C:\path\Catfood.Shapefile.3.0.0.nupkg
+```
+
+This helper exports the primary signer (for a release produced here, the author),
+not a timestamp or intermediate certificate, and refuses to overwrite an existing
+certificate file. It checks the CMS signature; use `dotnet nuget verify --all`
+to also verify package integrity and certificate trust when using the helper alone.
